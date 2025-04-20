@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,26 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Calendar, Clock } from "lucide-react";
-import { fetchUserAppointments, updateAppointmentStatus } from "@/services/appointmentService";
+import { fetchUserAppointments, updateAppointmentStatus, type Appointment } from "@/services/appointmentService";
 import { format, parseISO } from "date-fns";
-
-interface AppointmentData {
-  id: string;
-  doctor_id: string;
-  patient_id: string;
-  date: string;
-  time: string;
-  duration: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  notes?: string;
-  created_at: string;
-  profiles: { full_name: string; specialty?: string };
-  patients: { full_name: string };
-}
 
 export function AppointmentList() {
   const { user } = useAuth();
-  const [appointments, setAppointments] = useState<AppointmentData[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,7 +25,7 @@ export function AppointmentList() {
     try {
       setLoading(true);
       const data = await fetchUserAppointments(user.id, user.role || 'patient');
-      setAppointments(data);
+      setAppointments(data || []);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -53,7 +38,7 @@ export function AppointmentList() {
     }
   };
 
-  const handleUpdateStatus = async (appointmentId: string, status: AppointmentData['status']) => {
+  const handleUpdateStatus = async (appointmentId: string, status: Appointment['status']) => {
     try {
       await updateAppointmentStatus(appointmentId, status);
       
@@ -79,7 +64,7 @@ export function AppointmentList() {
     }
   };
 
-  const getStatusBadge = (status: AppointmentData['status']) => {
+  const getStatusBadge = (status: Appointment['status']) => {
     switch (status) {
       case 'pending':
         return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;

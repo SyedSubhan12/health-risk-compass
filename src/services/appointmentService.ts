@@ -7,16 +7,31 @@ export interface Appointment {
   patient_id: string;
   date: string;
   time: string;
-  duration: number; // in minutes
+  duration: number;
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
   notes?: string;
   created_at?: string;
+  profiles?: {
+    full_name: string;
+    specialty?: string;
+  };
+  patients?: {
+    full_name: string;
+  };
 }
 
 export const createAppointment = async (appointment: Omit<Appointment, 'id' | 'created_at'>) => {
   const { data, error } = await supabase
     .from('appointments')
-    .insert(appointment)
+    .insert({
+      doctor_id: appointment.doctor_id,
+      patient_id: appointment.patient_id,
+      date: appointment.date,
+      time: appointment.time,
+      duration: appointment.duration,
+      status: appointment.status,
+      notes: appointment.notes
+    })
     .select()
     .single();
     
@@ -29,7 +44,11 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
   
   const { data, error } = await supabase
     .from('appointments')
-    .select('*, profiles!appointments_doctor_id_fkey(full_name, specialty), patients:profiles!appointments_patient_id_fkey(full_name)')
+    .select(`
+      *,
+      profiles:doctor_id(full_name, specialty),
+      patients:patient_id(full_name)
+    `)
     .eq(roleField, userId)
     .order('date', { ascending: true })
     .order('time', { ascending: true });
@@ -41,7 +60,9 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
 export const updateAppointmentStatus = async (appointmentId: string, status: Appointment['status']) => {
   const { data, error } = await supabase
     .from('appointments')
-    .update({ status })
+    .update({
+      status: status
+    })
     .eq('id', appointmentId)
     .select()
     .single();
