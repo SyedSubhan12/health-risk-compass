@@ -55,7 +55,7 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     
   if (error) throw error;
   
-  // Validate and convert appointment status to ensure type safety
+  // Process and convert appointments to ensure they match the Appointment type
   return data?.map(appointment => {
     // Ensure status is one of the valid types
     let validStatus: Appointment['status'] = 'pending';
@@ -66,9 +66,34 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
       validStatus = status as Appointment['status'];
     }
     
+    // Create properly typed profiles and patients objects
+    // Handle possible SelectQueryError for profiles
+    const profiles = typeof appointment.profiles === 'object' && 
+                     !('error' in appointment.profiles) && 
+                     appointment.profiles !== null
+      ? appointment.profiles
+      : undefined;
+      
+    // Handle possible SelectQueryError for patients  
+    const patients = typeof appointment.patients === 'object' && 
+                     !('error' in appointment.patients) && 
+                     appointment.patients !== null
+      ? appointment.patients
+      : undefined;
+    
+    // Return properly typed appointment
     return {
-      ...appointment,
-      status: validStatus
+      id: appointment.id,
+      doctor_id: appointment.doctor_id,
+      patient_id: appointment.patient_id,
+      date: appointment.date,
+      time: appointment.time,
+      duration: appointment.duration,
+      status: validStatus,
+      notes: appointment.notes,
+      created_at: appointment.created_at,
+      profiles,
+      patients
     } as Appointment;
   }) || [];
 };
