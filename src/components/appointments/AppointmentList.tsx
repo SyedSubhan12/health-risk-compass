@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,7 @@ export function AppointmentList() {
     try {
       setLoading(true);
       const data = await fetchUserAppointments(user.id, user.role || 'patient');
-      setAppointments(data || []);
+      setAppointments(data);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -108,15 +109,19 @@ export function AppointmentList() {
       {appointments.map(appointment => {
         const isPatient = user?.role === 'patient';
         const otherPersonName = isPatient 
-          ? appointment.profiles.full_name 
-          : appointment.patients.full_name;
+          ? appointment.profiles?.full_name 
+          : appointment.patients?.full_name;
+        
+        if (!otherPersonName) {
+          console.error("Missing name data for appointment", appointment);
+        }
         
         return (
           <Card key={appointment.id} className="overflow-hidden">
             <CardHeader className="pb-3 bg-muted/30">
               <div className="flex justify-between items-center">
                 <CardTitle className="text-base">
-                  {isPatient ? 'Appointment with Dr.' : 'Patient:'} {otherPersonName}
+                  {isPatient ? 'Appointment with Dr.' : 'Patient:'} {otherPersonName || 'Unknown'}
                 </CardTitle>
                 {getStatusBadge(appointment.status)}
               </div>

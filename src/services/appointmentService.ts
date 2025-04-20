@@ -54,7 +54,23 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     .order('time', { ascending: true });
     
   if (error) throw error;
-  return data;
+  
+  // Validate and convert appointment status to ensure type safety
+  return data?.map(appointment => {
+    // Ensure status is one of the valid types
+    let validStatus: Appointment['status'] = 'pending';
+    const status = appointment.status.toLowerCase();
+    
+    if (status === 'pending' || status === 'confirmed' || 
+        status === 'cancelled' || status === 'completed') {
+      validStatus = status as Appointment['status'];
+    }
+    
+    return {
+      ...appointment,
+      status: validStatus
+    } as Appointment;
+  }) || [];
 };
 
 export const updateAppointmentStatus = async (appointmentId: string, status: Appointment['status']) => {
@@ -68,5 +84,5 @@ export const updateAppointmentStatus = async (appointmentId: string, status: App
     .single();
     
   if (error) throw error;
-  return data;
+  return data as Appointment;
 };
