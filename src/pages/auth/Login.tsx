@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -23,7 +24,32 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please provide both email and password",
+      });
+      return;
+    }
     await login(email, password);
+  };
+
+  const handleDemoLogin = async (type: 'patient' | 'doctor') => {
+    try {
+      const email = type === 'patient' ? "patient@example.com" : "doctor@example.com";
+      const password = "password123";
+      
+      setEmail(email);
+      setPassword(password);
+      
+      // Give a slight delay to update the UI before submitting
+      setTimeout(() => {
+        login(email, password);
+      }, 100);
+    } catch (err) {
+      console.error("Demo login error:", err);
+    }
   };
 
   return (
@@ -93,10 +119,7 @@ export default function Login() {
                   variant="outline"
                   type="button"
                   className="text-xs"
-                  onClick={() => {
-                    setEmail("patient@example.com");
-                    setPassword("password123");
-                  }}
+                  onClick={() => handleDemoLogin('patient')}
                 >
                   Demo Patient
                 </Button>
@@ -104,10 +127,7 @@ export default function Login() {
                   variant="outline"
                   type="button"
                   className="text-xs"
-                  onClick={() => {
-                    setEmail("doctor@example.com");
-                    setPassword("password123");
-                  }}
+                  onClick={() => handleDemoLogin('doctor')}
                 >
                   Demo Doctor
                 </Button>

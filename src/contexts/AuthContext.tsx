@@ -88,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      setError(null);
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -96,6 +97,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (signInError) throw signInError;
 
       // Navigation is handled by onAuthStateChange
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
     } catch (err) {
       setError((err as Error).message);
       toast({
@@ -111,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string, name: string, role: "patient" | "doctor") => {
     try {
       setLoading(true);
+      setError(null);
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -145,8 +151,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      setError(null);
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+      
       navigate("/login");
+      toast({
+        title: "Logout successful",
+        description: "You have been logged out.",
+      });
     } catch (err) {
       setError((err as Error).message);
       toast({
@@ -160,6 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const forgotPassword = async (email: string) => {
     try {
       setLoading(true);
+      setError(null);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + "/reset-password",
       });
@@ -185,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (password: string, token: string) => {
     try {
       setLoading(true);
+      setError(null);
       const { error } = await supabase.auth.updateUser({
         password: password,
       });

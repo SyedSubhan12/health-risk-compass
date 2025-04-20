@@ -68,18 +68,20 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     
     // Create properly typed profiles and patients objects
     // Handle possible SelectQueryError for profiles
-    const profiles = appointment.profiles === null ? undefined :
-                    typeof appointment.profiles === 'object' && 
-                    !('error' in appointment.profiles)
-      ? appointment.profiles
-      : undefined;
-      
-    // Handle possible SelectQueryError for patients  
-    const patients = appointment.patients === null ? undefined :
-                    typeof appointment.patients === 'object' && 
-                    !('error' in appointment.patients)
-      ? appointment.patients
-      : undefined;
+    let profilesData = undefined;
+    if (appointment.profiles !== null) {
+      if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
+        profilesData = appointment.profiles;
+      }
+    }
+    
+    // Handle possible SelectQueryError for patients
+    let patientsData = undefined;
+    if (appointment.patients !== null) {
+      if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
+        patientsData = appointment.patients;
+      }
+    }
     
     // Return properly typed appointment
     return {
@@ -92,8 +94,8 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
       status: validStatus,
       notes: appointment.notes,
       created_at: appointment.created_at,
-      profiles,
-      patients
+      profiles: profilesData,
+      patients: patientsData
     } as Appointment;
   }) || [];
 };
