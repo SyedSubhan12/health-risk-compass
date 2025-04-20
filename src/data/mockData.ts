@@ -1,4 +1,3 @@
-
 // Mock data for the health risk prediction system
 
 // Health Risk Types
@@ -23,6 +22,15 @@ export interface HealthRisk {
   recommendation: string;
 }
 
+// Interface for doctor profile
+export interface DoctorSummary {
+  id: string;
+  name: string;
+  specialty: string;
+  rating: number;
+  availability: string;
+}
+
 // User Health Profile
 export interface HealthProfile {
   userId: string;
@@ -35,6 +43,7 @@ export interface HealthProfile {
     lastUpdated: string;
   };
   generalRecommendation: string;
+  assignedDoctor?: DoctorSummary; // Make it optional with "?"
 }
 
 // Doctor Profile
@@ -133,7 +142,14 @@ export const mockPatientProfile: HealthProfile = {
     bmi: 26.5,
     lastUpdated: "2025-04-15"
   },
-  generalRecommendation: "Focus on reducing blood pressure through dietary changes and regular exercise. Schedule a follow-up appointment in 3 months."
+  generalRecommendation: "Focus on reducing blood pressure through dietary changes and regular exercise. Schedule a follow-up appointment in 3 months.",
+  assignedDoctor: {
+    id: "doctor-1",
+    name: "Dr. Emma Wilson",
+    specialty: "Cardiology",
+    rating: 4.8,
+    availability: "Next available: Tomorrow, 2:00 PM"
+  }
 };
 
 // Mock Doctors
