@@ -1,158 +1,183 @@
 
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
-// Define User type with roles
-type UserRole = "patient" | "doctor";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
+interface UserWithRole extends User {
+  role?: "patient" | "doctor";
+  name?: string;
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserWithRole | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
-  logout: () => void;
+  signup: (email: string, password: string, name: string, role: "patient" | "doctor") => Promise<void>;
+  logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (password: string, token: string) => Promise<void>;
   error: string | null;
   clearError: () => void;
 }
 
-// Create context with default values
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   login: async () => {},
   signup: async () => {},
-  logout: () => {},
+  logout: async () => {},
   forgotPassword: async () => {},
   resetPassword: async () => {},
   error: null,
   clearError: () => {},
 });
 
-// Mock user data - In a real application, this would come from a backend
-const MOCK_USERS = [
-  {
-    id: "1",
-    email: "patient@example.com",
-    password: "password123",
-    name: "John Doe",
-    role: "patient" as UserRole,
-  },
-  {
-    id: "2",
-    email: "doctor@example.com",
-    password: "password123",
-    name: "Dr. Jane Smith",
-    role: "doctor" as UserRole,
-  },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Check if user is already logged in from localStorage on initial load
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        setUser({
+          ...session.user,
+          role: profile?.role as "patient" | "doctor",
+          name: profile?.full_name
+        });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            setUser({
+              ...session.user,
+              role: profile?.role as "patient" | "doctor",
+              name: profile?.full_name
+            });
+          });
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      // Simulate API call with mock users
-      const mockUser = MOCK_USERS.find(
-        (u) => u.email === email && u.password === password
-      );
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      if (!mockUser) {
-        throw new Error("Invalid email or password");
-      }
+      if (signInError) throw signInError;
 
-      // Remove password before storing user
-      const { password: _, ...userWithoutPassword } = mockUser;
-      
-      setUser(userWithoutPassword);
-      localStorage.setItem("user", JSON.stringify(userWithoutPassword));
-      
-      // Redirect based on role
-      if (userWithoutPassword.role === "patient") {
-        navigate("/patient-dashboard");
-      } else {
-        navigate("/doctor-dashboard");
-      }
-      
+      // Navigation is handled by onAuthStateChange
     } catch (err) {
       setError((err as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (err as Error).message,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const signup = async (email: string, password: string, name: string, role: UserRole) => {
+  const signup = async (email: string, password: string, name: string, role: "patient" | "doctor") => {
     try {
       setLoading(true);
-      
-      // Check if email already exists
-      const userExists = MOCK_USERS.some((u) => u.email === email);
-      if (userExists) {
-        throw new Error("Email already in use");
-      }
-
-      // In a real app, this would be an API call to create a user
-      const newUser = {
-        id: `${MOCK_USERS.length + 1}`,
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
-        name,
-        role,
-      };
+        password,
+        options: {
+          data: {
+            full_name: name,
+            role: role,
+          },
+        },
+      });
 
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
-      
-      // Redirect based on role
-      if (role === "patient") {
-        navigate("/patient-dashboard");
-      } else {
-        navigate("/doctor-dashboard");
-      }
-      
+      if (signUpError) throw signUpError;
+
+      toast({
+        title: "Account created",
+        description: "Please check your email to verify your account.",
+      });
+
+      // Return to login page after successful signup
+      navigate("/login");
     } catch (err) {
       setError((err as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (err as Error).message,
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    navigate("/login");
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/login");
+    } catch (err) {
+      setError((err as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (err as Error).message,
+      });
+    }
   };
 
   const forgotPassword = async (email: string) => {
     try {
       setLoading(true);
-      // In a real app, this would send a reset email
-      // Here we'll just simulate success
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Reset link sent",
+        description: "Please check your email for the password reset link.",
+      });
     } catch (err) {
       setError((err as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (err as Error).message,
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -160,14 +185,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const resetPassword = async (password: string, token: string) => {
     try {
       setLoading(true);
-      // In a real app, this would validate the token and update the password
-      // Here we'll just simulate success
-      setTimeout(() => {
-        setLoading(false);
-        navigate("/login");
-      }, 1000);
+      const { error } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been successfully updated.",
+      });
+      navigate("/login");
     } catch (err) {
       setError((err as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: (err as Error).message,
+      });
+    } finally {
       setLoading(false);
     }
   };
