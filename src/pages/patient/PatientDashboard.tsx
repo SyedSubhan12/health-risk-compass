@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,17 +24,12 @@ import {
 import { DoctorCard } from "@/components/doctor/doctor-card";
 import { PredictionHistoryCard } from "@/components/patient/prediction-history-card";
 import { MessageCenter } from "@/components/messaging/message-center";
+import { AppointmentList } from "@/components/appointments/AppointmentList";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState("overview");
   
-  // Mock data for messaging system
-  const [activeContactId, setActiveContactId] = useState<string | undefined>(
-    mockDoctors.length > 0 ? mockDoctors[0].id : undefined
-  );
-  const [messages, setMessages] = useState<any[]>([]);
-
   // Map risk types to appropriate icons
   const getRiskIcon = (type: string) => {
     switch (type) {
@@ -61,29 +55,10 @@ export default function PatientDashboard() {
     }
   };
 
-  const handleSendMessage = (text: string) => {
-    const newMessage = {
-      id: `msg-${Date.now()}`,
-      senderId: user?.id || "",
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isMe: true
-    };
-    setMessages([...messages, newMessage]);
-  };
-
   const handleSelectDoctor = (doctorId: string) => {
     // This would update the user's selected doctor in a real app
     console.log(`Selected doctor with ID: ${doctorId}`);
   };
-
-  // Format doctors for message contacts
-  const messageContacts = mockDoctors.map(doctor => ({
-    id: doctor.id,
-    name: doctor.name,
-    role: doctor.specialty,
-    isActive: doctor.id === activeContactId
-  }));
 
   return (
     <PageContainer>
@@ -130,6 +105,14 @@ export default function PatientDashboard() {
             data-active={selectedTab === "messages"}
           >
             Messages
+          </Button>
+          <Button 
+            variant={selectedTab === "appointments" ? "default" : "ghost"}
+            onClick={() => setSelectedTab("appointments")}
+            className="rounded-none border-b-2 border-transparent px-4 py-1 hover:border-primary data-[active]:border-primary"
+            data-active={selectedTab === "appointments"}
+          >
+            Appointments
           </Button>
         </div>
       </div>
@@ -301,13 +284,13 @@ export default function PatientDashboard() {
 
       {selectedTab === "messages" && (
         <PageSection title="Messages" description="Communicate with your healthcare provider">
-          <MessageCenter
-            contacts={messageContacts}
-            messages={messages}
-            activeContactId={activeContactId}
-            onSelectContact={setActiveContactId}
-            onSendMessage={handleSendMessage}
-          />
+          <MessageCenter />
+        </PageSection>
+      )}
+
+      {selectedTab === "appointments" && (
+        <PageSection title="Your Appointments" description="Manage your scheduled appointments">
+          <AppointmentList />
         </PageSection>
       )}
     </PageContainer>

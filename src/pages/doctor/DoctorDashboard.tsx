@@ -21,6 +21,8 @@ import {
   Calendar,
   User
 } from "lucide-react";
+import { MessageCenter } from "@/components/messaging/message-center";
+import { AppointmentList } from "@/components/appointments/AppointmentList";
 
 import { mockPatientsList } from "@/data/mockData";
 
@@ -28,6 +30,7 @@ export default function DoctorDashboard() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
   
   // Filter patients based on search term
   const filteredPatients = mockPatientsList.filter(patient => 
@@ -66,8 +69,8 @@ export default function DoctorDashboard() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
@@ -152,16 +155,22 @@ export default function DoctorDashboard() {
           </Card>
         </div>
 
-        <div className="md:col-span-2">
-          {selectedPatient && activePatient ? (
-            <Tabs defaultValue="overview">
-              <TabsList className="mb-4 w-full">
-                <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
-                <TabsTrigger value="records" className="flex-1">Medical Records</TabsTrigger>
-                <TabsTrigger value="messages" className="flex-1">Messages</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview">
+        <div className="lg:col-span-3">
+          <Tabs defaultValue="patients" className="mb-6">
+            <TabsList className="w-full">
+              <TabsTrigger value="patients" className="flex-1">
+                Patient Management
+              </TabsTrigger>
+              <TabsTrigger value="messages" className="flex-1">
+                Messages
+              </TabsTrigger>
+              <TabsTrigger value="appointments" className="flex-1">
+                Appointments
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="patients">
+              {selectedPatient && activePatient ? (
                 <Card>
                   <CardHeader>
                     <div className="flex justify-between items-center">
@@ -184,90 +193,115 @@ export default function DoctorDashboard() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="bg-accent p-4 rounded-md">
-                      <h3 className="font-medium mb-2">Highest Risk Factor</h3>
-                      <div className="flex items-center">
-                        <RiskIndicator 
-                          level={activePatient.highestRisk.level} 
-                          label={activePatient.highestRisk.type} 
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="font-medium mb-2">Add Clinical Note</h3>
-                      <Textarea placeholder="Enter your medical observations and recommendations..." className="min-h-[100px]" />
-                      <Button className="mt-2">Save Note</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="records">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Medical Records</CardTitle>
-                    <CardDescription>
-                      View and manage patient's health records and documents
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center p-3 bg-accent rounded-md">
-                      <div className="flex items-center">
-                        <FileText className="h-5 w-5 mr-2" />
-                        <div>
-                          <p className="font-medium">Health Risk Assessment</p>
-                          <p className="text-sm text-muted-foreground">{activePatient.lastCheckup}</p>
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList className="w-full">
+                        <TabsTrigger value="overview" className="flex-1">Overview</TabsTrigger>
+                        <TabsTrigger value="records" className="flex-1">Medical Records</TabsTrigger>
+                        <TabsTrigger value="notes" className="flex-1">Clinical Notes</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="overview" className="space-y-4 pt-4">
+                        <div className="bg-accent p-4 rounded-md">
+                          <h3 className="font-medium mb-2">Highest Risk Factor</h3>
+                          <div className="flex items-center">
+                            <RiskIndicator 
+                              level={activePatient.highestRisk.level} 
+                              label={activePatient.highestRisk.type} 
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <Button variant="outline" size="sm">View</Button>
-                    </div>
-                    
-                    <div className="flex justify-between items-center p-3 bg-accent rounded-md">
-                      <div className="flex items-center">
-                        <FileText className="h-5 w-5 mr-2" />
-                        <div>
-                          <p className="font-medium">Lab Results</p>
-                          <p className="text-sm text-muted-foreground">3 months ago</p>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">View</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
-              <TabsContent value="messages">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Messages</CardTitle>
-                    <CardDescription>
-                      Communicate securely with {activePatient.name}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                      <MessageCircle className="h-10 w-10 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No messages yet</h3>
-                      <p className="text-muted-foreground mb-4">Start a conversation with this patient.</p>
-                      <Button>
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        New Message
-                      </Button>
-                    </div>
+                        {/* Quick metrics */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground">BMI</p>
+                            <p className="text-lg font-semibold">24.5</p>
+                          </div>
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground">Blood Pressure</p>
+                            <p className="text-lg font-semibold">120/80</p>
+                          </div>
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground">Glucose</p>
+                            <p className="text-lg font-semibold">95 mg/dL</p>
+                          </div>
+                          <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground">Cholesterol</p>
+                            <p className="text-lg font-semibold">180 mg/dL</p>
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="records" className="space-y-4 pt-4">
+                        <div className="flex justify-between items-center p-3 bg-accent rounded-md">
+                          <div className="flex items-center">
+                            <FileText className="h-5 w-5 mr-2" />
+                            <div>
+                              <p className="font-medium">Health Risk Assessment</p>
+                              <p className="text-sm text-muted-foreground">{activePatient.lastCheckup}</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm">View</Button>
+                        </div>
+                        
+                        <div className="flex justify-between items-center p-3 bg-accent rounded-md">
+                          <div className="flex items-center">
+                            <FileText className="h-5 w-5 mr-2" />
+                            <div>
+                              <p className="font-medium">Lab Results</p>
+                              <p className="text-sm text-muted-foreground">3 months ago</p>
+                            </div>
+                          </div>
+                          <Button variant="outline" size="sm">View</Button>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="notes" className="space-y-4 pt-4">
+                        <div>
+                          <Textarea 
+                            placeholder="Enter your medical observations and recommendations..." 
+                            className="min-h-[150px]" 
+                          />
+                          <Button className="mt-2">Save Note</Button>
+                        </div>
+                        
+                        <div className="p-3 bg-accent rounded-md">
+                          <div className="flex justify-between mb-1">
+                            <p className="font-medium">Previous Note</p>
+                            <span className="text-xs text-muted-foreground">2 weeks ago</span>
+                          </div>
+                          <p className="text-sm">
+                            Patient reports occasional chest pain. Recommended lifestyle changes and 
+                            scheduled follow-up appointment in 3 weeks.
+                          </p>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </CardContent>
                 </Card>
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <Card className="h-full flex flex-col items-center justify-center text-center p-10">
-              <User className="h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-medium mb-2">No Patient Selected</h3>
-              <p className="text-muted-foreground max-w-sm mb-6">
-                Select a patient from the list to view their health details and risk assessments
-              </p>
-            </Card>
-          )}
+              ) : (
+                <Card className="h-full flex flex-col items-center justify-center text-center p-10">
+                  <User className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-xl font-medium mb-2">No Patient Selected</h3>
+                  <p className="text-muted-foreground max-w-sm mb-6">
+                    Select a patient from the list to view their health details and risk assessments
+                  </p>
+                </Card>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="messages">
+              <PageSection title="Messages" description="Communicate with your patients">
+                <MessageCenter />
+              </PageSection>
+            </TabsContent>
+            
+            <TabsContent value="appointments">
+              <PageSection title="Appointments" description="Manage your patient appointments">
+                <AppointmentList />
+              </PageSection>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </PageContainer>
