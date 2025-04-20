@@ -1,16 +1,25 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
+import { NavBar } from "./nav-bar";
 
 interface PageContainerProps {
   children: React.ReactNode;
   className?: string;
+  showNav?: boolean;
 }
 
-export function PageContainer({ children, className }: PageContainerProps) {
+export function PageContainer({ 
+  children, 
+  className,
+  showNav = true,
+}: PageContainerProps) {
   return (
-    <div className={cn("container mx-auto py-6 px-4 md:px-6", className)}>
-      {children}
+    <div className="min-h-screen flex flex-col">
+      {showNav && <NavBar />}
+      <div className={cn("flex-1 container mx-auto py-6 px-4 md:px-6", className)}>
+        {children}
+      </div>
     </div>
   );
 }
