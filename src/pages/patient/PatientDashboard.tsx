@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -41,7 +42,11 @@ export default function PatientDashboard() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/patient-prediction")}>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => navigate("/doctors")}
+              >
                 Book Now
               </Button>
             </CardFooter>
@@ -65,7 +70,11 @@ export default function PatientDashboard() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/patient-prediction")}>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => navigate("/model-prediction")}
+              >
                 Start Assessment
               </Button>
             </CardFooter>
@@ -89,7 +98,11 @@ export default function PatientDashboard() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/model-prediction")}>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => navigate("/model-prediction")}
+              >
                 Try Models
               </Button>
             </CardFooter>
@@ -113,7 +126,14 @@ export default function PatientDashboard() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/patient-prediction")}>
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => {
+                  // For now, just navigate to patient dashboard as profile page isn't implemented
+                  toast.info("Profile management will be available soon.");
+                }}
+              >
                 Edit Profile
               </Button>
             </CardFooter>

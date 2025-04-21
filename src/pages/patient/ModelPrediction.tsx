@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -62,8 +61,11 @@ const ModelPredictionPage: React.FC = () => {
   const selectedModel: MLModel = AVAILABLE_MODELS.find(model => model.id === selectedModelId) || AVAILABLE_MODELS[0];
   const targetFields = useMemo(() => getTargetFields(selectedModel.family), [selectedModel.family]);
 
-  // Filter out target variables from the form
-  const filteredFields = FIELD_META.filter(field => !targetFields.includes(field.name));
+  // Filter out target variables from the form based on model family
+  const filteredFields = useMemo(() => 
+    FIELD_META.filter(field => !targetFields.includes(field.name)), 
+    [targetFields]
+  );
 
   const handleInputChange = (name: string, value: any) => {
     setInputValues(prev => ({ ...prev, [name]: value }));
@@ -73,9 +75,11 @@ const ModelPredictionPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
+      // Filter out target fields from input data
       const filteredInput = Object.fromEntries(
         Object.entries(inputValues).filter(([key]) => !targetFields.includes(key))
       );
+      
       const result = await makePrediction(selectedModelId, filteredInput);
       setPredictionResult(result);
       toast.success("Prediction completed successfully!");
@@ -97,11 +101,13 @@ const ModelPredictionPage: React.FC = () => {
       ];
     }
     // Radar: show each input variable value
-    return Object.entries(predictionResult.inputData).map(([key, value]) => ({
-      subject: key,
-      value: typeof value === 'number' ? value : Number(value),
-      fullMark: 100
-    }));
+    return Object.entries(predictionResult.inputData)
+      .filter(([key]) => !targetFields.includes(key)) // Exclude target fields from visualization
+      .map(([key, value]) => ({
+        subject: key,
+        value: typeof value === 'number' ? value : Number(value),
+        fullMark: 100
+      }));
   };
 
   return (
