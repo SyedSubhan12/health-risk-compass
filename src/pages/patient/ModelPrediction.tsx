@@ -12,8 +12,8 @@ import { AVAILABLE_MODELS, MLModel, makePrediction } from "@/services/modelServi
 import { ArrowLeft, BrainCircuit, BarChart4, LineChart, Layers } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
+import { HealthAdvisoryPanel } from "@/components/patient/health-advisory-panel";
 
-// Input fields for BRFSS-style models
 const FIELD_META = [
   { name: "Diabetes_012", label: "Diabetes_012", min: 0, max: 2, type: "number", defaultValue: 0 },
   { name: "HighBP", label: "HighBP", min: 0, max: 1, type: "number", defaultValue: 0 },
@@ -61,7 +61,6 @@ const ModelPredictionPage: React.FC = () => {
   const selectedModel: MLModel = AVAILABLE_MODELS.find(model => model.id === selectedModelId) || AVAILABLE_MODELS[0];
   const targetFields = useMemo(() => getTargetFields(selectedModel.family), [selectedModel.family]);
 
-  // Filter out target variables from the form based on model family
   const filteredFields = useMemo(() => 
     FIELD_META.filter(field => !targetFields.includes(field.name)), 
     [targetFields]
@@ -75,7 +74,6 @@ const ModelPredictionPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // Filter out target fields from input data
       const filteredInput = Object.fromEntries(
         Object.entries(inputValues).filter(([key]) => !targetFields.includes(key))
       );
@@ -100,9 +98,8 @@ const ModelPredictionPage: React.FC = () => {
         { name: "Confidence", value: predictionResult.confidence, color: "#06b6d4" }
       ];
     }
-    // Radar: show each input variable value
     return Object.entries(predictionResult.inputData)
-      .filter(([key]) => !targetFields.includes(key)) // Exclude target fields from visualization
+      .filter(([key]) => !targetFields.includes(key))
       .map(([key, value]) => ({
         subject: key,
         value: typeof value === 'number' ? value : Number(value),
@@ -121,8 +118,17 @@ const ModelPredictionPage: React.FC = () => {
           </Button>
         }
       />
+      
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        {predictionResult && (
+          <HealthAdvisoryPanel 
+            prediction={predictionResult} 
+            condition={selectedModel.family} 
+          />
+        )}
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Input and model selector */}
         <div className="col-span-1 lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
@@ -191,7 +197,6 @@ const ModelPredictionPage: React.FC = () => {
             </Card>
           </form>
         </div>
-        {/* Result Visualization */}
         <div className="col-span-1 space-y-6">
           <Card>
             <CardHeader>
