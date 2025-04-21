@@ -35,6 +35,23 @@ export default function Login() {
     await login(email, password);
   };
 
+  const handleDemoLogin = async (type: 'patient' | 'doctor') => {
+    try {
+      const email = type === 'patient' ? "patient@example.com" : "doctor@example.com";
+      const password = "password123";
+      
+      setEmail(email);
+      setPassword(password);
+      
+      // Give a slight delay to update the UI before submitting
+      setTimeout(() => {
+        login(email, password);
+      }, 100);
+    } catch (err) {
+      console.error("Demo login error:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md px-4">
@@ -95,6 +112,26 @@ export default function Login() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
+              
+              {/* Demo access buttons */}
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="text-xs"
+                  onClick={() => handleDemoLogin('patient')}
+                >
+                  Demo Patient
+                </Button>
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="text-xs"
+                  onClick={() => handleDemoLogin('doctor')}
+                >
+                  Demo Doctor
+                </Button>
+              </div>
             </form>
           </CardContent>
           <CardFooter className="flex justify-center">
