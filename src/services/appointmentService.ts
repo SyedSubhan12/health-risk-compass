@@ -14,10 +14,10 @@ export interface Appointment {
   profiles?: {
     full_name: string;
     specialty?: string;
-  };
+  } | null;
   patients?: {
     full_name: string;
-  };
+  } | null;
 }
 
 export const createAppointment = async (appointment: Omit<Appointment, 'id' | 'created_at'>) => {
@@ -67,25 +67,19 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     }
     
     // Create properly typed profiles and patients objects
-    // Handle possible SelectQueryError for profiles
-    let profilesData = undefined;
-    if (appointment.profiles !== null) {
-      if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
-        profilesData = {
-          full_name: appointment.profiles?.full_name || "",
-          specialty: appointment.profiles?.specialty
-        };
-      }
+    let profilesData = null;
+    if (appointment.profiles && typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
+      profilesData = {
+        full_name: appointment.profiles.full_name || "",
+        specialty: appointment.profiles.specialty
+      };
     }
     
-    // Handle possible SelectQueryError for patients
-    let patientsData = undefined;
-    if (appointment.patients !== null) {
-      if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
-        patientsData = {
-          full_name: appointment.patients?.full_name || ""
-        };
-      }
+    let patientsData = null;
+    if (appointment.patients && typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
+      patientsData = {
+        full_name: appointment.patients.full_name || ""
+      };
     }
     
     // Return properly typed appointment

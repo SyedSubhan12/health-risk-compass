@@ -3,7 +3,6 @@ import React from "react";
 import { 
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -55,22 +54,20 @@ export function RiskIndicator({
   const displayLabel = label || getRiskLabel(level);
   
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className={cn("flex items-center space-x-2", className)}>
-            <div className={cn("w-3 h-3 rounded-full", colorClass)}></div>
-            <span className="text-sm font-medium">
-              {displayLabel}
-              {showValue && score !== undefined && `: ${score}`}
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{displayLabel}</p>
-          {score !== undefined && <p className="text-xs">Score: {score}</p>}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className={cn("flex items-center space-x-2", className)}>
+          <div className={cn("w-3 h-3 rounded-full", colorClass)}></div>
+          <span className="text-sm font-medium">
+            {displayLabel}
+            {showValue && score !== undefined && `: ${score}`}
+          </span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{displayLabel}</p>
+        {score !== undefined && <p className="text-xs">Score: {score}</p>}
+      </TooltipContent>
+    </Tooltip>
   );
 }
