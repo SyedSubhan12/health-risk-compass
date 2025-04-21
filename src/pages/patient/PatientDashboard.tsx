@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarIcon, RocketIcon, User2Icon, BrainCircuit } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 export default function PatientDashboard() {
   const navigate = useNavigate();
@@ -131,7 +132,10 @@ export default function PatientDashboard() {
                 className="w-full" 
                 onClick={() => {
                   // For now, just navigate to patient dashboard as profile page isn't implemented
-                  toast.info("Profile management will be available soon.");
+                  toast({
+                    title: "Coming Soon",
+                    description: "Profile management will be available soon."
+                  });
                 }}
               >
                 Edit Profile
