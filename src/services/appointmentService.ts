@@ -70,10 +70,10 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     // Handle possible SelectQueryError for profiles
     let profilesData = undefined;
     if (appointment.profiles) {
-      if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
+      if (typeof appointment.profiles === 'object' && appointment.profiles !== null && !('error' in appointment.profiles)) {
         profilesData = {
-          full_name: appointment.profiles?.full_name || 'Unknown Doctor',
-          specialty: appointment.profiles?.specialty
+          full_name: appointment.profiles && appointment.profiles.full_name ? appointment.profiles.full_name : 'Unknown Doctor',
+          specialty: appointment.profiles && appointment.profiles.specialty ? appointment.profiles.specialty : undefined
         };
       }
     }
@@ -81,9 +81,9 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     // Handle possible SelectQueryError for patients
     let patientsData = undefined;
     if (appointment.patients) {
-      if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
+      if (typeof appointment.patients === 'object' && appointment.patients !== null && !('error' in appointment.patients)) {
         patientsData = {
-          full_name: appointment.patients?.full_name || 'Unknown Patient'
+          full_name: appointment.patients && appointment.patients.full_name ? appointment.patients.full_name : 'Unknown Patient'
         };
       }
     }
@@ -138,10 +138,10 @@ export const getAppointmentById = async (appointmentId: string) => {
   // Create a correctly typed Appointment object with null checks
   return {
     ...appointmentData,
-    profiles: appointmentData.profiles && !('error' in appointmentData.profiles) 
+    profiles: appointmentData.profiles && appointmentData.profiles !== null && !('error' in appointmentData.profiles) 
       ? appointmentData.profiles 
       : { full_name: 'Unknown Doctor' },
-    patients: appointmentData.patients && !('error' in appointmentData.patients) 
+    patients: appointmentData.patients && appointmentData.patients !== null && !('error' in appointmentData.patients) 
       ? appointmentData.patients 
       : { full_name: 'Unknown Patient' }
   } as Appointment;
@@ -162,7 +162,7 @@ export const getDoctorPatientConnections = async (doctorId: string) => {
   return data?.map(item => {
     // Check if item has expected properties
     const patientId = 'patient_id' in item ? item.patient_id : null;
-    const patientName = item.patients && 'patients' in item && item.patients && typeof item.patients === 'object' && 'full_name' in item.patients
+    const patientName = item.patients !== null && 'patients' in item && item.patients !== null && typeof item.patients === 'object' && item.patients && 'full_name' in item.patients
       ? item.patients.full_name
       : 'Unknown Patient';
       
@@ -192,8 +192,8 @@ export const getPatientDoctorConnections = async (patientId: string) => {
     
     return {
       id: doctorId,
-      name: doctorInfo && item.profiles && 'full_name' in item.profiles ? item.profiles.full_name : 'Unknown Doctor',
-      specialty: doctorInfo && item.profiles && 'specialty' in item.profiles ? item.profiles.specialty : undefined
+      name: doctorInfo && item.profiles !== null && item.profiles && 'full_name' in item.profiles ? item.profiles.full_name : 'Unknown Doctor',
+      specialty: doctorInfo && item.profiles !== null && item.profiles && 'specialty' in item.profiles ? item.profiles.specialty : undefined
     };
   }).filter(item => item.id !== null) || [];
 };
