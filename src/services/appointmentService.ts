@@ -113,3 +113,53 @@ export const updateAppointmentStatus = async (appointmentId: string, status: App
   if (error) throw error;
   return data as Appointment;
 };
+
+export const getAppointmentById = async (appointmentId: string) => {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select(`
+      *,
+      profiles:doctor_id(full_name, specialty),
+      patients:patient_id(full_name)
+    `)
+    .eq('id', appointmentId)
+    .single();
+    
+  if (error) throw error;
+  return data as Appointment;
+};
+
+export const getDoctorPatientConnections = async (doctorId: string) => {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select(`
+      distinct patient_id,
+      patients:patient_id(full_name)
+    `)
+    .eq('doctor_id', doctorId);
+    
+  if (error) throw error;
+  
+  return data?.map(item => ({
+    id: item.patient_id,
+    name: item.patients?.full_name || 'Unknown Patient'
+  })) || [];
+};
+
+export const getPatientDoctorConnections = async (patientId: string) => {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select(`
+      distinct doctor_id,
+      profiles:doctor_id(full_name, specialty)
+    `)
+    .eq('patient_id', patientId);
+    
+  if (error) throw error;
+  
+  return data?.map(item => ({
+    id: item.doctor_id,
+    name: item.profiles?.full_name || 'Unknown Doctor',
+    specialty: item.profiles?.specialty
+  })) || [];
+};
