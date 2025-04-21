@@ -1,16 +1,14 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, MessageCircle, Send, CalendarIcon, AlertCircle } from "lucide-react";
+import { User, MessageCircle, Send, CalendarIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchContacts,
   fetchMessages,
   sendMessage,
   markMessagesAsRead,
-  getUnreadMessageCount,
   ContactWithMessages
 } from "@/services/messagingService";
 import { toast } from "@/hooks/use-toast";
@@ -46,7 +44,6 @@ export function MessageCenter() {
 
   const activeContact = contacts.find(contact => contact.id === activeContactId);
   
-  // Filter contacts based on search term
   const filteredContacts = contacts.filter(contact => 
     contact.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -61,12 +58,10 @@ export function MessageCenter() {
     if (activeContactId) {
       loadMessages(activeContactId);
       
-      // Mark messages as read when viewing conversation
       markMessagesAsRead(activeContactId).catch(error => {
         console.error("Error marking messages as read:", error);
       });
       
-      // Set up real-time listener for new messages
       const channel = supabase
         .channel('messages-channel')
         .on('postgres_changes', { 
@@ -77,7 +72,6 @@ export function MessageCenter() {
         }, payload => {
           const newMessage = payload.new;
           
-          // Add the new message to the state
           const formattedMessage = {
             id: newMessage.id,
             senderId: newMessage.sender_id,
@@ -91,10 +85,8 @@ export function MessageCenter() {
           
           setMessages(prev => [...prev, formattedMessage]);
           
-          // Mark message as read since we're currently viewing this conversation
           markMessagesAsRead(activeContactId);
           
-          // Update contacts list with new message info
           setContacts(prev => 
             prev.map(contact => 
               contact.id === activeContactId 
@@ -119,7 +111,6 @@ export function MessageCenter() {
     }
   }, [activeContactId, user]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -132,7 +123,6 @@ export function MessageCenter() {
     try {
       setLoading(true);
       
-      // First try to load from appointment connections
       let connectionsData: any[] = [];
       
       if (user?.role === 'patient') {
@@ -141,7 +131,6 @@ export function MessageCenter() {
         connectionsData = await getDoctorPatientConnections(user.id);
       }
       
-      // If we have appointment connections, format them as contacts
       if (connectionsData.length > 0) {
         const formattedContacts: ContactWithMessages[] = connectionsData.map((connection) => ({
           id: connection.id,
@@ -153,7 +142,6 @@ export function MessageCenter() {
           unread: false
         }));
         
-        // Now load message data for each contact
         for (const contact of formattedContacts) {
           try {
             const messagesData = await fetchMessages(contact.id);
@@ -170,14 +158,12 @@ export function MessageCenter() {
         
         setContacts(formattedContacts);
       } else {
-        // Fallback to regular contacts
-        const contactsData = await fetchContacts(user?.role || 'patient');
-        setContacts(contactsData);
+        const contactsList = await fetchContacts(user?.role || 'patient');
+        setContacts(contactsList);
       }
       
-      // Select first contact if none is selected
-      if (contactsData.length > 0 && !activeContactId) {
-        setActiveContactId(contactsData[0].id);
+      if (contacts.length > 0 && !activeContactId) {
+        setActiveContactId(contacts[0].id);
       }
     } catch (error) {
       toast({
@@ -212,7 +198,6 @@ export function MessageCenter() {
     if (!messageText.trim() || !activeContactId) return;
     
     try {
-      // Add optimistic message
       const optimisticMessage: Message = {
         id: `temp-${Date.now()}`,
         senderId: user?.id || '',
@@ -224,10 +209,8 @@ export function MessageCenter() {
       setMessages(prev => [...prev, optimisticMessage]);
       setMessageText("");
       
-      // Send to server
       await sendMessage(activeContactId, messageText);
       
-      // Update the contact's last message in the list
       setContacts(prev => 
         prev.map(contact => 
           contact.id === activeContactId 
@@ -252,7 +235,6 @@ export function MessageCenter() {
   const handleSelectContact = (contactId: string) => {
     setActiveContactId(contactId);
     
-    // Update the unread status for this contact
     setContacts(prev => 
       prev.map(contact => 
         contact.id === contactId && contact.unread
@@ -270,12 +252,10 @@ export function MessageCenter() {
     });
   };
 
-  // Check for mobile viewport
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
     <div className="flex flex-col md:flex-row h-[600px] gap-4">
-      {/* Contacts sidebar */}
       <Card className={`${activeContactId && isMobile ? 'hidden' : 'flex'} md:flex md:w-1/3 h-full flex-col`}>
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
@@ -351,7 +331,6 @@ export function MessageCenter() {
         </CardContent>
       </Card>
 
-      {/* Messages area */}
       <Card className={`${!activeContactId && isMobile ? 'hidden' : 'flex'} md:flex md:w-2/3 h-full flex-col`}>
         {activeContact ? (
           <>

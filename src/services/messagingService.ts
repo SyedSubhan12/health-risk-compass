@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 // Types for messages and contacts
@@ -97,20 +96,28 @@ export const fetchContacts = async (userRole: string) => {
     // Get doctors this patient has appointments with
     const { data: doctorConnections, error: doctorError } = await supabase
       .from('appointments')
-      .select('distinct doctor_id')
+      .select('doctor_id')
       .eq('patient_id', user.id);
     
     if (doctorError) throw doctorError;
-    contactIds = doctorConnections.map(conn => conn.doctor_id);
+    
+    // Filter out any items that don't have doctor_id property or have parsing errors
+    contactIds = doctorConnections
+      .filter(conn => conn && typeof conn === 'object' && 'doctor_id' in conn)
+      .map(conn => conn.doctor_id);
   } else {
     // Get patients this doctor has appointments with
     const { data: patientConnections, error: patientError } = await supabase
       .from('appointments')
-      .select('distinct patient_id')
+      .select('patient_id')
       .eq('doctor_id', user.id);
     
     if (patientError) throw patientError;
-    contactIds = patientConnections.map(conn => conn.patient_id);
+    
+    // Filter out any items that don't have patient_id property or have parsing errors
+    contactIds = patientConnections
+      .filter(conn => conn && typeof conn === 'object' && 'patient_id' in conn)
+      .map(conn => conn.patient_id);
   }
   
   // If no connections, try to get all potential contacts based on role
