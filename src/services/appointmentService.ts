@@ -72,7 +72,7 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     if (appointment.profiles !== null) {
       if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
         profilesData = {
-          full_name: appointment.profiles?.full_name || 'Unknown Doctor',
+          full_name: appointment.profiles?.full_name || "",
           specialty: appointment.profiles?.specialty
         };
       }
@@ -83,7 +83,7 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     if (appointment.patients !== null) {
       if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
         patientsData = {
-          full_name: appointment.patients?.full_name || 'Unknown Patient'
+          full_name: appointment.patients?.full_name || ""
         };
       }
     }
@@ -117,83 +117,4 @@ export const updateAppointmentStatus = async (appointmentId: string, status: App
     
   if (error) throw error;
   return data as Appointment;
-};
-
-export const getAppointmentById = async (appointmentId: string) => {
-  const { data, error } = await supabase
-    .from('appointments')
-    .select(`
-      *,
-      profiles:doctor_id(full_name, specialty),
-      patients:patient_id(full_name)
-    `)
-    .eq('id', appointmentId)
-    .single();
-    
-  if (error) throw error;
-  
-  // Handle possible SelectQueryError for profiles and patients
-  const appointmentData = data as any;
-  
-  // Create a correctly typed Appointment object
-  return {
-    ...appointmentData,
-    profiles: appointmentData.profiles && !('error' in appointmentData.profiles) 
-      ? appointmentData.profiles 
-      : { full_name: 'Unknown Doctor' },
-    patients: appointmentData.patients && !('error' in appointmentData.patients) 
-      ? appointmentData.patients 
-      : { full_name: 'Unknown Patient' }
-  } as Appointment;
-};
-
-export const getDoctorPatientConnections = async (doctorId: string) => {
-  const { data, error } = await supabase
-    .from('appointments')
-    .select(`
-      patient_id,
-      patients:patient_id(full_name)
-    `)
-    .eq('doctor_id', doctorId);
-    
-  if (error) throw error;
-  
-  // Safely handle data that might have parser errors
-  return data?.map(item => {
-    // Check if item has expected properties
-    const patientId = 'patient_id' in item ? item.patient_id : null;
-    const patientName = 'patients' in item && item.patients && typeof item.patients === 'object' && 'full_name' in item.patients
-      ? item.patients.full_name
-      : 'Unknown Patient';
-      
-    return {
-      id: patientId,
-      name: patientName
-    };
-  }).filter(item => item.id !== null) || [];
-};
-
-export const getPatientDoctorConnections = async (patientId: string) => {
-  const { data, error } = await supabase
-    .from('appointments')
-    .select(`
-      doctor_id,
-      profiles:doctor_id(full_name, specialty)
-    `)
-    .eq('patient_id', patientId);
-    
-  if (error) throw error;
-  
-  // Safely handle data that might have parser errors
-  return data?.map(item => {
-    // Check if item has expected properties
-    const doctorId = 'doctor_id' in item ? item.doctor_id : null;
-    const doctorInfo = 'profiles' in item && item.profiles && typeof item.profiles === 'object';
-    
-    return {
-      id: doctorId,
-      name: doctorInfo && 'full_name' in item.profiles ? item.profiles.full_name : 'Unknown Doctor',
-      specialty: doctorInfo && 'specialty' in item.profiles ? item.profiles.specialty : undefined
-    };
-  }).filter(item => item.id !== null) || [];
 };

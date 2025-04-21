@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { User, MessageCircle, Send, CalendarIcon } from "lucide-react";
+import { User, MessageCircle, Send } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchContacts,
@@ -15,12 +15,6 @@ import { toast } from "@/hooks/use-toast";
 import { AppointmentForm } from "@/components/appointments/AppointmentForm";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  getDoctorPatientConnections, 
-  getPatientDoctorConnections 
-} from "@/services/appointmentService";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface Message {
   id: string;
@@ -37,16 +31,10 @@ export function MessageCenter() {
   const [activeContactId, setActiveContactId] = useState<string | undefined>();
   const [messageText, setMessageText] = useState("");
   const [loading, setLoading] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeContact = contacts.find(contact => contact.id === activeContactId);
-  
-  const filteredContacts = contacts.filter(contact => 
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   useEffect(() => {
     if (user) {
@@ -58,10 +46,12 @@ export function MessageCenter() {
     if (activeContactId) {
       loadMessages(activeContactId);
       
+      // Mark messages as read when viewing conversation
       markMessagesAsRead(activeContactId).catch(error => {
         console.error("Error marking messages as read:", error);
       });
       
+      // Set up real-time listener for new messages
       const channel = supabase
         .channel('messages-channel')
         .on('postgres_changes', { 
@@ -72,6 +62,7 @@ export function MessageCenter() {
         }, payload => {
           const newMessage = payload.new;
           
+          // Add the new message to the state
           const formattedMessage = {
             id: newMessage.id,
             senderId: newMessage.sender_id,
@@ -85,23 +76,8 @@ export function MessageCenter() {
           
           setMessages(prev => [...prev, formattedMessage]);
           
+          // Mark message as read since we're currently viewing this conversation
           markMessagesAsRead(activeContactId);
-          
-          setContacts(prev => 
-            prev.map(contact => 
-              contact.id === activeContactId 
-                ? { 
-                    ...contact, 
-                    lastMessage: newMessage.content,
-                    lastMessageTime: new Date(newMessage.created_at).toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    }),
-                    unread: false
-                  }
-                : contact
-            )
-          );
         })
         .subscribe();
       
@@ -111,6 +87,7 @@ export function MessageCenter() {
     }
   }, [activeContactId, user]);
 
+  // Scroll to bottom when messages change
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -122,48 +99,12 @@ export function MessageCenter() {
   const loadContacts = async () => {
     try {
       setLoading(true);
+      const contactsData = await fetchContacts(user?.role || 'patient');
+      setContacts(contactsData);
       
-      let connectionsData: any[] = [];
-      
-      if (user?.role === 'patient') {
-        connectionsData = await getPatientDoctorConnections(user.id);
-      } else if (user?.role === 'doctor') {
-        connectionsData = await getDoctorPatientConnections(user.id);
-      }
-      
-      if (connectionsData.length > 0) {
-        const formattedContacts: ContactWithMessages[] = connectionsData.map((connection) => ({
-          id: connection.id,
-          name: connection.name,
-          role: user?.role === 'patient' ? 'doctor' : 'patient',
-          specialty: connection.specialty,
-          lastMessage: '',
-          lastMessageTime: '',
-          unread: false
-        }));
-        
-        for (const contact of formattedContacts) {
-          try {
-            const messagesData = await fetchMessages(contact.id);
-            if (messagesData.length > 0) {
-              const latestMessage = messagesData[messagesData.length - 1];
-              contact.lastMessage = latestMessage.text;
-              contact.lastMessageTime = latestMessage.timestamp;
-              contact.unread = !latestMessage.isMe && latestMessage.senderId === contact.id;
-            }
-          } catch (error) {
-            console.error(`Error loading messages for contact ${contact.id}:`, error);
-          }
-        }
-        
-        setContacts(formattedContacts);
-      } else {
-        const contactsList = await fetchContacts(user?.role || 'patient');
-        setContacts(contactsList);
-      }
-      
-      if (contacts.length > 0 && !activeContactId) {
-        setActiveContactId(contacts[0].id);
+      // Select first contact if none is selected
+      if (contactsData.length > 0 && !activeContactId) {
+        setActiveContactId(contactsData[0].id);
       }
     } catch (error) {
       toast({
@@ -179,7 +120,6 @@ export function MessageCenter() {
 
   const loadMessages = async (contactId: string) => {
     try {
-      setLoadingMessages(true);
       const messagesData = await fetchMessages(contactId);
       setMessages(messagesData);
     } catch (error) {
@@ -189,8 +129,6 @@ export function MessageCenter() {
         description: "Failed to load messages"
       });
       console.error("Error loading messages:", error);
-    } finally {
-      setLoadingMessages(false);
     }
   };
 
@@ -198,6 +136,7 @@ export function MessageCenter() {
     if (!messageText.trim() || !activeContactId) return;
     
     try {
+      // Add optimistic message
       const optimisticMessage: Message = {
         id: `temp-${Date.now()}`,
         senderId: user?.id || '',
@@ -209,8 +148,10 @@ export function MessageCenter() {
       setMessages(prev => [...prev, optimisticMessage]);
       setMessageText("");
       
+      // Send to server
       await sendMessage(activeContactId, messageText);
       
+      // Update the contact's last message in the list
       setContacts(prev => 
         prev.map(contact => 
           contact.id === activeContactId 
@@ -234,14 +175,6 @@ export function MessageCenter() {
 
   const handleSelectContact = (contactId: string) => {
     setActiveContactId(contactId);
-    
-    setContacts(prev => 
-      prev.map(contact => 
-        contact.id === contactId && contact.unread
-          ? { ...contact, unread: false }
-          : contact
-      )
-    );
   };
 
   const handleAppointmentSuccess = () => {
@@ -252,41 +185,20 @@ export function MessageCenter() {
     });
   };
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
   return (
     <div className="flex flex-col md:flex-row h-[600px] gap-4">
-      <Card className={`${activeContactId && isMobile ? 'hidden' : 'flex'} md:flex md:w-1/3 h-full flex-col`}>
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg">Conversations</CardTitle>
-            <Badge variant="secondary">{contacts.filter(c => c.unread).length}</Badge>
-          </div>
-          <div className="relative">
-            <Input 
-              placeholder="Search contacts" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
-          </div>
+      <Card className="md:w-1/3 h-full flex flex-col">
+        <CardHeader>
+          <CardTitle className="text-lg">Conversations</CardTitle>
         </CardHeader>
         <CardContent className="p-2 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center space-x-4 p-3 rounded-md">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-full max-w-[150px]" />
-                    <Skeleton className="h-3 w-full max-w-[200px]" />
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-center p-4">
+              <span>Loading contacts...</span>
             </div>
-          ) : filteredContacts.length > 0 ? (
+          ) : contacts.length > 0 ? (
             <div className="space-y-1">
-              {filteredContacts.map((contact) => (
+              {contacts.map((contact) => (
                 <Button
                   key={contact.id}
                   variant={contact.id === activeContactId ? "default" : "ghost"}
@@ -304,17 +216,13 @@ export function MessageCenter() {
                           <span className="text-xs text-muted-foreground">{contact.lastMessageTime}</span>
                         )}
                       </div>
-                      <div className="flex items-center">
-                        {contact.lastMessage ? (
-                          <p className="text-xs text-muted-foreground truncate flex-1">{contact.lastMessage}</p>
-                        ) : (
-                          <p className="text-xs text-muted-foreground italic">No messages yet</p>
-                        )}
-                        {contact.unread && (
-                          <div className="w-2 h-2 bg-primary rounded-full ml-2 flex-shrink-0"></div>
-                        )}
-                      </div>
+                      {contact.lastMessage && (
+                        <p className="text-xs text-muted-foreground truncate">{contact.lastMessage}</p>
+                      )}
                     </div>
+                    {contact.unread && (
+                      <div className="w-2 h-2 bg-primary rounded-full ml-2"></div>
+                    )}
                   </div>
                 </Button>
               ))}
@@ -322,54 +230,32 @@ export function MessageCenter() {
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center p-4">
               <MessageCircle className="h-8 w-8 text-muted-foreground mb-2" />
-              <h3 className="font-medium">No conversations found</h3>
-              <p className="text-sm text-muted-foreground">
-                {searchTerm ? "Try a different search term" : "Connect with healthcare providers"}
-              </p>
+              <h3 className="font-medium">No conversations yet</h3>
+              <p className="text-sm text-muted-foreground">You'll see your conversations here</p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Card className={`${!activeContactId && isMobile ? 'hidden' : 'flex'} md:flex md:w-2/3 h-full flex-col`}>
+      <Card className="md:w-2/3 h-full flex flex-col">
         {activeContact ? (
           <>
             <CardHeader className="pb-2 border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  {isMobile && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="mr-2"
-                      onClick={() => setActiveContactId(undefined)}
-                    >
-                      <span className="sr-only">Back</span>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                        <path d="m15 18-6-6 6-6" />
-                      </svg>
-                    </Button>
-                  )}
                   <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center mr-2">
                     <User className="h-4 w-4" />
                   </div>
                   <div>
                     <CardTitle className="text-base">{activeContact.name}</CardTitle>
-                    <p className="text-xs text-muted-foreground">
-                      {activeContact.role === 'doctor' 
-                        ? `${activeContact.specialty || 'Doctor'}` 
-                        : 'Patient'}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{activeContact.role === 'doctor' ? `${activeContact.specialty || 'Doctor'}` : 'Patient'}</p>
                   </div>
                 </div>
                 
                 {user?.role === 'patient' && activeContact.role === 'doctor' && (
                   <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
                     <DialogTrigger asChild>
-                      <Button size="sm" variant="outline">
-                        <CalendarIcon className="h-4 w-4 mr-2" />
-                        Schedule Appointment
-                      </Button>
+                      <Button size="sm" variant="outline">Schedule Appointment</Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <AppointmentForm 
@@ -385,15 +271,7 @@ export function MessageCenter() {
             </CardHeader>
             <CardContent className="flex-1 p-0 flex flex-col">
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {loadingMessages ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}>
-                        <Skeleton className={`h-16 w-2/3 rounded-lg ${i % 2 === 0 ? "ml-auto" : "mr-auto"}`} />
-                      </div>
-                    ))}
-                  </div>
-                ) : messages.length > 0 ? (
+                {messages.length > 0 ? (
                   <>
                     {messages.map((message) => (
                       <div
@@ -419,8 +297,8 @@ export function MessageCenter() {
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center">
                     <MessageCircle className="h-8 w-8 text-muted-foreground mb-2" />
-                    <h3 className="font-medium">Start a conversation</h3>
-                    <p className="text-sm text-muted-foreground">Send a message to {activeContact.name}</p>
+                    <h3 className="font-medium">No messages yet</h3>
+                    <p className="text-sm text-muted-foreground">Start the conversation</p>
                   </div>
                 )}
               </div>
