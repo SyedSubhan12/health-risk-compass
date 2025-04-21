@@ -73,11 +73,11 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
       typeof appointment.profiles === 'object' &&
       !('error' in appointment.profiles)
     ) {
-      // Using a non-null assertion operator here since we've verified it's not null above
-      const profile = appointment.profiles!;
+      // Using optional chaining and nullish coalescing to safely handle properties
+      const profile = appointment.profiles;
       profilesData = {
-        full_name: profile && profile.full_name ? profile.full_name : "",
-        specialty: profile && profile.specialty ? profile.specialty : undefined
+        full_name: profile && 'full_name' in profile ? String(profile.full_name) : "",
+        specialty: profile && 'specialty' in profile ? String(profile.specialty) : undefined
       };
     }
     
@@ -87,10 +87,9 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
       typeof appointment.patients === 'object' &&
       !('error' in appointment.patients)
     ) {
-      // Using a non-null assertion operator here since we've verified it's not null above
-      const patient = appointment.patients!;
+      const patient = appointment.patients;
       patientsData = {
-        full_name: patient && patient.full_name ? patient.full_name : ""
+        full_name: patient && 'full_name' in patient ? String(patient.full_name) : ""
       };
     }
     
