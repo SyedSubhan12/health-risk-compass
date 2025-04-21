@@ -49,11 +49,6 @@ export default function Login() {
       }, 100);
     } catch (err) {
       console.error("Demo login error:", err);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to login with demo account",
-      });
     }
   };
 

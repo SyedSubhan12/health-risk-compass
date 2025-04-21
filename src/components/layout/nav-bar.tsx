@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,11 +41,21 @@ export function NavBar() {
                   </Link>
                 </Button>
                 <Button
+                  variant={isActive("/patient-prediction") ? "default" : "ghost"}
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/patient-prediction" className="flex items-center">
+                    <Search className="mr-2 h-4 w-4" />
+                    Prediction
+                  </Link>
+                </Button>
+                <Button
                   variant={isActive("/doctors") ? "default" : "ghost"}
                   size="sm"
                   asChild
                 >
-                  <Link to="/doctors" className="flex items-center">
+                  <Link to="#" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
                     Doctors
                   </Link>

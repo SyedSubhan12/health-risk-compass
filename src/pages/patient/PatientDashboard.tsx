@@ -1,149 +1,298 @@
-
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { 
-  PageContainer, 
-  PageHeader, 
-  PageSection 
-} from "@/components/layout/page-container";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, RocketIcon, User2Icon, BrainCircuit } from "lucide-react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { PageContainer, PageHeader, PageSection } from "@/components/layout/page-container";
+import { HealthCard } from "@/components/ui/health-card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Heart, 
+  Droplet, 
+  Activity, 
+  UserPlus, 
+  History, 
+  MessageCircle,
+  Weight,
+  User,
+  Calendar
+} from "lucide-react";
+import { 
+  mockPatientProfile, 
+  mockDoctors, 
+  mockPastPredictions 
+} from "@/data/mockData";
+import { DoctorCard } from "@/components/doctor/doctor-card";
+import { PredictionHistoryCard } from "@/components/patient/prediction-history-card";
+import { MessageCenter } from "@/components/messaging/message-center";
+import { AppointmentList } from "@/components/appointments/AppointmentList";
 
 export default function PatientDashboard() {
-  const navigate = useNavigate();
   const { user } = useAuth();
+  const [selectedTab, setSelectedTab] = useState("overview");
+  
+  // Map risk types to appropriate icons
+  const getRiskIcon = (type: string) => {
+    switch (type) {
+      case "diabetes":
+        return <Droplet className="h-5 w-5" />;
+      case "heartDisease":
+        return <Heart className="h-5 w-5" />;
+      case "hypertension":
+        return <Activity className="h-5 w-5" />;
+      case "obesity":
+        return <Weight className="h-5 w-5" />;
+      default:
+        return <Activity className="h-5 w-5" />;
+    }
+  };
+
+  const formatRiskType = (type: string) => {
+    switch (type) {
+      case "heartDisease":
+        return "Heart Disease";
+      default:
+        return type.charAt(0).toUpperCase() + type.slice(1);
+    }
+  };
+
+  const handleSelectDoctor = (doctorId: string) => {
+    // This would update the user's selected doctor in a real app
+    console.log(`Selected doctor with ID: ${doctorId}`);
+  };
 
   return (
     <PageContainer>
-      <PageHeader
-        title={`Welcome back, ${user?.name || "Patient"}!`}
-        description="Your personalized dashboard for managing appointments and health insights"
+      <PageHeader 
+        title={`Hello, ${user?.name || 'Patient'}`}
+        description="Monitor your health risks and get personalized recommendations"
+        actions={
+          <Button asChild>
+            <Link to="/patient-prediction">New Prediction</Link>
+          </Button>
+        }
       />
 
-      <PageSection title="Quick Actions">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Book Appointment</CardTitle>
-              <CardDescription>
-                Schedule your next consultation with ease
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <CalendarIcon className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Find a suitable time slot and book your appointment
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => navigate("/doctors")}
-              >
-                Book Now
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Health Risk Assessment</CardTitle>
-              <CardDescription>
-                Understand your potential health risks
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <RocketIcon className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Take our assessment to get a personalized risk report
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => navigate("/model-prediction")}
-              >
-                Start Assessment
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">ML Model Predictions</CardTitle>
-              <CardDescription>
-                Try our machine learning models for health predictions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <BrainCircuit className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Generate predictions using various ML models
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => navigate("/model-prediction")}
-              >
-                Try Models
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Manage Profile</CardTitle>
-              <CardDescription>
-                Update your personal and health information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <User2Icon className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Keep your profile up-to-date for better recommendations
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => {
-                  // For now, just navigate to patient dashboard as profile page isn't implemented
-                  toast({
-                    title: "Coming Soon",
-                    description: "Profile management will be available soon."
-                  });
-                }}
-              >
-                Edit Profile
-              </Button>
-            </CardFooter>
-          </Card>
+      <div className="mb-6 border-b">
+        <div className="flex overflow-x-auto space-x-1">
+          <Button 
+            variant={selectedTab === "overview" ? "default" : "ghost"}
+            onClick={() => setSelectedTab("overview")}
+            className="rounded-none border-b-2 border-transparent px-4 py-1 hover:border-primary data-[active]:border-primary"
+            data-active={selectedTab === "overview"}
+          >
+            Overview
+          </Button>
+          <Button 
+            variant={selectedTab === "doctors" ? "default" : "ghost"}
+            onClick={() => setSelectedTab("doctors")}
+            className="rounded-none border-b-2 border-transparent px-4 py-1 hover:border-primary data-[active]:border-primary"
+            data-active={selectedTab === "doctors"}
+          >
+            Find Doctor
+          </Button>
+          <Button 
+            variant={selectedTab === "history" ? "default" : "ghost"}
+            onClick={() => setSelectedTab("history")}
+            className="rounded-none border-b-2 border-transparent px-4 py-1 hover:border-primary data-[active]:border-primary"
+            data-active={selectedTab === "history"}
+          >
+            History
+          </Button>
+          <Button 
+            variant={selectedTab === "messages" ? "default" : "ghost"}
+            onClick={() => setSelectedTab("messages")}
+            className="rounded-none border-b-2 border-transparent px-4 py-1 hover:border-primary data-[active]:border-primary"
+            data-active={selectedTab === "messages"}
+          >
+            Messages
+          </Button>
+          <Button 
+            variant={selectedTab === "appointments" ? "default" : "ghost"}
+            onClick={() => setSelectedTab("appointments")}
+            className="rounded-none border-b-2 border-transparent px-4 py-1 hover:border-primary data-[active]:border-primary"
+            data-active={selectedTab === "appointments"}
+          >
+            Appointments
+          </Button>
         </div>
-      </PageSection>
+      </div>
+
+      {selectedTab === "overview" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="col-span-1 lg:col-span-2">
+              <PageSection title="Your Health Risk Scores">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {mockPatientProfile.healthRisks.map((risk) => (
+                    <HealthCard
+                      key={risk.id}
+                      title={formatRiskType(risk.type)}
+                      value={risk.score}
+                      maxValue={risk.maxScore}
+                      riskLevel={risk.level}
+                      icon={getRiskIcon(risk.type)}
+                      recommendation={risk.recommendation}
+                    />
+                  ))}
+                </div>
+              </PageSection>
+
+              <PageSection title="Recent Measurements">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Health Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-muted-foreground">Blood Pressure</span>
+                        <span className="text-lg font-semibold">{mockPatientProfile.recentMeasurements.bloodPressure}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-muted-foreground">Glucose</span>
+                        <span className="text-lg font-semibold">{mockPatientProfile.recentMeasurements.glucoseLevel} mg/dL</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-muted-foreground">Cholesterol</span>
+                        <span className="text-lg font-semibold">{mockPatientProfile.recentMeasurements.cholesterol} mg/dL</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-muted-foreground">BMI</span>
+                        <span className="text-lg font-semibold">{mockPatientProfile.recentMeasurements.bmi}</span>
+                      </div>
+                    </div>
+                    <div className="mt-4 p-3 bg-accent rounded-md text-sm">
+                      <p className="font-medium">Recommendation:</p>
+                      <p>{mockPatientProfile.generalRecommendation}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </PageSection>
+            </div>
+            
+            <div className="col-span-1">
+              <PageSection title="Your Doctor">
+                {mockPatientProfile.assignedDoctor ? (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center overflow-hidden">
+                          <User className="h-6 w-6 text-accent-foreground" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">{mockPatientProfile.assignedDoctor.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground">{mockPatientProfile.assignedDoctor.specialty}</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-1">
+                          <span className="text-sm text-yellow-500">★</span>
+                          <span className="text-sm font-medium">{mockPatientProfile.assignedDoctor.rating}</span>
+                        </div>
+                        <span className="text-sm text-muted-foreground">{mockPatientProfile.assignedDoctor.availability}</span>
+                      </div>
+                      <div className="flex flex-col space-y-2">
+                        <Button size="sm" className="w-full" asChild>
+                          <Link to="#">
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Message
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" className="w-full" asChild>
+                          <Link to="#">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Schedule
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
+                      <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center">
+                        <UserPlus className="h-6 w-6 text-accent-foreground" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium">No doctor assigned</h3>
+                        <p className="text-sm text-muted-foreground">Choose a doctor to help manage your health</p>
+                      </div>
+                      <Button className="w-full" onClick={() => setSelectedTab("doctors")}>
+                        Find a Doctor
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </PageSection>
+              
+              <PageSection title="Upcoming Appointments">
+                <Card>
+                  <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                    <Calendar className="h-8 w-8 text-muted-foreground" />
+                    <div>
+                      <h3 className="font-medium">No upcoming appointments</h3>
+                      <p className="text-sm text-muted-foreground">Schedule an appointment with your doctor</p>
+                    </div>
+                    <Button variant="outline" className="w-full" disabled={!mockPatientProfile.assignedDoctor}>
+                      Schedule Appointment
+                    </Button>
+                  </CardContent>
+                </Card>
+              </PageSection>
+            </div>
+          </div>
+        </>
+      )}
+
+      {selectedTab === "doctors" && (
+        <PageSection title="Available Doctors" description="Select a doctor to manage your health">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mockDoctors.map((doctor) => (
+              <DoctorCard
+                key={doctor.id}
+                id={doctor.id}
+                name={doctor.name}
+                specialty={doctor.specialty}
+                bio={doctor.bio}
+                rating={doctor.rating}
+                availability={doctor.availability}
+                onSelect={() => handleSelectDoctor(doctor.id)}
+              />
+            ))}
+          </div>
+        </PageSection>
+      )}
+
+      {selectedTab === "history" && (
+        <PageSection title="Prediction History" description="Your past health risk assessments">
+          <div className="space-y-4">
+            {mockPastPredictions.map((prediction) => (
+              <PredictionHistoryCard
+                key={prediction.id}
+                id={prediction.id}
+                date={prediction.date}
+                healthRisks={prediction.healthRisks}
+                doctorNote={prediction.doctorNote}
+                onViewDetails={() => console.log(`View details for prediction ${prediction.id}`)}
+              />
+            ))}
+          </div>
+        </PageSection>
+      )}
+
+      {selectedTab === "messages" && (
+        <PageSection title="Messages" description="Communicate with your healthcare provider">
+          <MessageCenter />
+        </PageSection>
+      )}
+
+      {selectedTab === "appointments" && (
+        <PageSection title="Your Appointments" description="Manage your scheduled appointments">
+          <AppointmentList />
+        </PageSection>
+      )}
     </PageContainer>
   );
 }
