@@ -13,8 +13,8 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import PatientDashboard from "./pages/patient/PatientDashboard";
-import PatientPrediction from "./pages/patient/PatientPrediction";
 import ModelPrediction from "./pages/patient/ModelPrediction";
+import Doctors from "./pages/patient/Doctors";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import DoctorInsights from "./pages/doctor/DoctorInsights";
 
@@ -83,18 +83,18 @@ const AppRoutes = () => {
         } 
       />
       <Route 
-        path="/patient-prediction" 
-        element={
-          <ProtectedRoute allowedRole="patient">
-            <PatientPrediction />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
         path="/model-prediction" 
         element={
           <ProtectedRoute allowedRole="patient">
             <ModelPrediction />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/doctors" 
+        element={
+          <ProtectedRoute allowedRole="patient">
+            <Doctors />
           </ProtectedRoute>
         } 
       />

@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { User, Home, MessageCircle, Search, Settings } from "lucide-react";
+import { User, Home, MessageCircle, Settings } from "lucide-react";
 
 export function NavBar() {
   const { user, logout } = useAuth();
@@ -41,13 +41,13 @@ export function NavBar() {
                   </Link>
                 </Button>
                 <Button
-                  variant={isActive("/patient-prediction") ? "default" : "ghost"}
+                  variant={isActive("/model-prediction") ? "default" : "ghost"}
                   size="sm"
                   asChild
                 >
-                  <Link to="/patient-prediction" className="flex items-center">
-                    <Search className="mr-2 h-4 w-4" />
-                    Prediction
+                  <Link to="/model-prediction" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Health Analysis
                   </Link>
                 </Button>
                 <Button
@@ -55,7 +55,7 @@ export function NavBar() {
                   size="sm"
                   asChild
                 >
-                  <Link to="#" className="flex items-center">
+                  <Link to="/doctors" className="flex items-center">
                     <User className="mr-2 h-4 w-4" />
                     Doctors
                   </Link>
@@ -65,7 +65,7 @@ export function NavBar() {
                   size="sm"
                   asChild
                 >
-                  <Link to="#" className="flex items-center">
+                  <Link to="/messages" className="flex items-center">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     Messages
                   </Link>
@@ -91,7 +91,7 @@ export function NavBar() {
                   asChild
                 >
                   <Link to="/doctor-insights" className="flex items-center">
-                    <Search className="mr-2 h-4 w-4" />
+                    <User className="mr-2 h-4 w-4" />
                     Insights
                   </Link>
                 </Button>
@@ -100,7 +100,7 @@ export function NavBar() {
                   size="sm"
                   asChild
                 >
-                  <Link to="#" className="flex items-center">
+                  <Link to="/messages" className="flex items-center">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     Messages
                   </Link>

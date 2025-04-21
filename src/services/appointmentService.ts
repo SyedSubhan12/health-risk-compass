@@ -73,10 +73,11 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
       typeof appointment.profiles === 'object' &&
       !('error' in appointment.profiles)
     ) {
-      const profile = appointment.profiles;
+      // Using a non-null assertion operator here since we've verified it's not null above
+      const profile = appointment.profiles!;
       profilesData = {
-        full_name: profile.full_name ?? "",
-        specialty: profile.specialty
+        full_name: profile && profile.full_name ? profile.full_name : "",
+        specialty: profile && profile.specialty ? profile.specialty : undefined
       };
     }
     
@@ -86,9 +87,10 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
       typeof appointment.patients === 'object' &&
       !('error' in appointment.patients)
     ) {
-      const patient = appointment.patients;
+      // Using a non-null assertion operator here since we've verified it's not null above
+      const patient = appointment.patients!;
       patientsData = {
-        full_name: patient.full_name ?? ""
+        full_name: patient && patient.full_name ? patient.full_name : ""
       };
     }
     
@@ -122,4 +124,3 @@ export const updateAppointmentStatus = async (appointmentId: string, status: App
   if (error) throw error;
   return data as Appointment;
 };
-
