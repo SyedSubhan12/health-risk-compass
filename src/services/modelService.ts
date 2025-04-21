@@ -1,13 +1,32 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * ML model metadata for the three target conditions:
+ * - Diabetes: "diabetes"
+ * - Heart Attack: "heartattack"
+ * - Stroke: "stroke"
+ */
 export interface MLModel {
   id: string;
+  family: "diabetes" | "heartattack" | "stroke";
   name: string;
   description?: string;
   modelUrl?: string;
   fileKey: string;
 }
+
+/**
+ * Input schema for all models:
+ * {
+ *   Diabetes_012: number, HighBP: number, HighChol: number, CholCheck: number, BMI: number,
+ *   Smoker: number, Stroke: number, HeartDiseaseorAttack: number, PhysActivity: number,
+ *   Fruits: number, Veggies: number, HvyAlcoholConsump: number, AnyHealthcare: number,
+ *   NoDocbcCost: number, GenHlth: number, MentHlth: number, PhysHlth: number,
+ *   DiffWalk: number, Sex: number, Age: number, Education: number, Income: number, Diabetes_binary: number
+ * }
+ * (Note: the actual label for y/target varies per condition.)
+ */
 
 export interface ModelPrediction {
   modelId: string;
@@ -18,104 +37,133 @@ export interface ModelPrediction {
   timestamp: string;
 }
 
-// Predefined models available in the application
+// List of available models: update fileKey as per Supabase storage keys
 export const AVAILABLE_MODELS: MLModel[] = [
   {
-    id: "random-forest",
-    name: "Random Forest",
-    description: "Ensemble learning method for classification and regression",
-    fileKey: "models/random-forest.json"
+    id: "diabetes-svm",
+    family: "diabetes",
+    name: "Diabetes SVM",
+    description: "SVM for Diabetes prediction",
+    fileKey: "diabetes/svm.json"
   },
   {
-    id: "svm",
-    name: "SVM",
-    description: "Support Vector Machine for classification tasks",
-    fileKey: "models/svm.json"
+    id: "diabetes-rf",
+    family: "diabetes",
+    name: "Diabetes Random Forest",
+    description: "Random Forest for Diabetes prediction",
+    fileKey: "diabetes/random-forest.json"
   },
   {
-    id: "xgboost",
-    name: "XGBoost",
-    description: "Gradient boosting algorithm with high performance",
-    fileKey: "models/xgboost.json"
+    id: "diabetes-xgboost",
+    family: "diabetes",
+    name: "Diabetes XGBoost",
+    description: "XGBoost for Diabetes prediction",
+    fileKey: "diabetes/xgboost.json"
   },
   {
-    id: "ann",
-    name: "Artificial Neural Network",
-    description: "Deep learning model for complex pattern recognition",
-    fileKey: "models/ann.json"
-  }
+    id: "diabetes-ann",
+    family: "diabetes",
+    name: "Diabetes ANN",
+    description: "Neural Network for Diabetes prediction",
+    fileKey: "diabetes/ann.json"
+  },
+  {
+    id: "stroke-svm",
+    family: "stroke",
+    name: "Stroke SVM",
+    description: "SVM for Stroke prediction",
+    fileKey: "stroke/svm.json"
+  },
+  {
+    id: "stroke-rf",
+    family: "stroke",
+    name: "Stroke Random Forest",
+    description: "Random Forest for Stroke prediction",
+    fileKey: "stroke/random-forest.json"
+  },
+  {
+    id: "stroke-xgboost",
+    family: "stroke",
+    name: "Stroke XGBoost",
+    description: "XGBoost for Stroke prediction",
+    fileKey: "stroke/xgboost.json"
+  },
+  {
+    id: "stroke-ann",
+    family: "stroke",
+    name: "Stroke ANN",
+    description: "Neural Network for Stroke prediction",
+    fileKey: "stroke/ann.json"
+  },
+  {
+    id: "heartattack-svm",
+    family: "heartattack",
+    name: "HeartAttack SVM",
+    description: "SVM for Heart Attack prediction",
+    fileKey: "heartattack/svm.json"
+  },
+  {
+    id: "heartattack-rf",
+    family: "heartattack",
+    name: "HeartAttack Random Forest",
+    description: "Random Forest for Heart Attack prediction",
+    fileKey: "heartattack/random-forest.json"
+  },
+  {
+    id: "heartattack-xgboost",
+    family: "heartattack",
+    name: "HeartAttack XGBoost",
+    description: "XGBoost for Heart Attack prediction",
+    fileKey: "heartattack/xgboost.json"
+  },
+  {
+    id: "heartattack-ann",
+    family: "heartattack",
+    name: "HeartAttack ANN",
+    description: "Neural Network for Heart Attack prediction",
+    fileKey: "heartattack/ann.json"
+  },
 ];
 
-/**
- * Fetches a signed URL for a model file stored in Supabase
- */
+// Fetches a signed URL for a model stored in Supabase Storage bucket
 export const getModelSignedUrl = async (fileKey: string): Promise<string> => {
+  // TODO: bucket name must match your Supabase Storage bucket
   const { data, error } = await supabase.storage
     .from('ml-models')
-    .createSignedUrl(fileKey, 3600); // URL valid for 1 hour
+    .createSignedUrl(fileKey, 3600);
 
-  if (error) {
+  if (error || !data?.signedUrl) {
     console.error("Error getting signed URL:", error);
-    throw error;
+    throw error ?? new Error("Unknown error getting signed URL");
   }
 
   return data.signedUrl;
 };
 
-/**
- * Loads a model from Supabase storage
- */
+// Loads the model (as JSON) from the signed URL
 export const loadModel = async (modelId: string): Promise<any> => {
   const model = AVAILABLE_MODELS.find(m => m.id === modelId);
-  
-  if (!model) {
-    throw new Error(`Model with ID ${modelId} not found`);
-  }
-
-  try {
-    // Get a signed URL for the model file
-    const signedUrl = await getModelSignedUrl(model.fileKey);
-    
-    // Fetch the model data
-    const response = await fetch(signedUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to load model: ${response.statusText}`);
-    }
-    
-    const modelData = await response.json();
-    return modelData;
-  } catch (error) {
-    console.error(`Error loading model ${modelId}:`, error);
-    throw error;
-  }
+  if (!model) throw new Error(`Model with ID ${modelId} not found`);
+  const signedUrl = await getModelSignedUrl(model.fileKey);
+  const response = await fetch(signedUrl);
+  if (!response.ok) throw new Error(`Failed to fetch model: ${response.statusText}`);
+  return await response.json();
 };
 
 /**
- * Makes a prediction using the specified model
- * This is a mock implementation - in reality, you would use the actual model's prediction logic
+ * Mock implementation of prediction (replace with real in-browser prediction if possible).
+ * In reality, in-browser JS ML libraries would be needed.
  */
 export const makePrediction = async (
   modelId: string,
   inputData: Record<string, any>
 ): Promise<ModelPrediction> => {
-  // In a real implementation, you would:
-  // 1. Load the model from storage
-  // 2. Use the appropriate library to make a prediction
-  // 3. Return the result
-  
-  // Mock implementation for demonstration purposes
   const model = AVAILABLE_MODELS.find(m => m.id === modelId);
-  if (!model) {
-    throw new Error(`Model with ID ${modelId} not found`);
-  }
-
-  // Simulate prediction processing time
+  if (!model) throw new Error(`Model with ID ${modelId} not found`);
   await new Promise(resolve => setTimeout(resolve, 500));
-
-  // Generate a random prediction result for demonstration
+  // Return mock data
   const predictionValue = Math.random() * 100;
-  const confidenceValue = Math.random() * 100;
-  
+  const confidenceValue = 70 + Math.random() * 30;
   return {
     modelId,
     modelName: model.name,
@@ -126,58 +174,14 @@ export const makePrediction = async (
   };
 };
 
-/**
- * Saves a prediction to the user's history
- */
-export const savePrediction = async (prediction: ModelPrediction): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('predictions')
-      .insert({
-        model_id: prediction.modelId,
-        model_name: prediction.modelName,
-        prediction_value: prediction.prediction,
-        confidence: prediction.confidence,
-        input_data: prediction.inputData,
-        user_id: supabase.auth.getUser().then(({ data }) => data.user?.id)
-      });
+// Commentary: Supabase table 'predictions' does not exist, so saving/fetching prediction history is disabled below.
 
-    if (error) throw error;
-  } catch (error) {
-    console.error("Error saving prediction:", error);
-    throw error;
-  }
-};
+// export const savePrediction = async (prediction: ModelPrediction): Promise<void> => {
+//   // Not implemented: would need a predictions table with correct columns
+// };
 
-/**
- * Fetches prediction history for the current user
- */
-export const getUserPredictions = async (): Promise<ModelPrediction[]> => {
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      throw new Error("User not authenticated");
-    }
-
-    const { data, error } = await supabase
-      .from('predictions')
-      .select('*')
-      .eq('user_id', userData.user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return data.map(item => ({
-      modelId: item.model_id,
-      modelName: item.model_name,
-      prediction: item.prediction_value,
-      confidence: item.confidence,
-      inputData: item.input_data,
-      timestamp: item.created_at
-    }));
-  } catch (error) {
-    console.error("Error fetching predictions:", error);
-    return [];
-  }
-};
+// export const getUserPredictions = async (): Promise<ModelPrediction[]> => {
+//   // Not implemented
+//   return [];
+// };
 

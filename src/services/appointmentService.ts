@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Appointment {
@@ -34,14 +33,14 @@ export const createAppointment = async (appointment: Omit<Appointment, 'id' | 'c
     })
     .select()
     .single();
-    
+
   if (error) throw error;
   return data;
 };
 
 export const fetchUserAppointments = async (userId: string, userRole: string) => {
   const roleField = userRole === 'patient' ? 'patient_id' : 'doctor_id';
-  
+
   const { data, error } = await supabase
     .from('appointments')
     .select(`
@@ -52,43 +51,31 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     .eq(roleField, userId)
     .order('date', { ascending: true })
     .order('time', { ascending: true });
-    
+
   if (error) throw error;
-  
-  // Process and convert appointments to ensure they match the Appointment type
-  return data?.map(appointment => {
-    // Ensure status is one of the valid types
+
+  return data?.map((appointment: any) => {
     let validStatus: Appointment['status'] = 'pending';
-    const status = appointment.status.toLowerCase();
-    
-    if (status === 'pending' || status === 'confirmed' || 
-        status === 'cancelled' || status === 'completed') {
+    const status = appointment.status?.toLowerCase?.();
+    if (status === 'pending' || status === 'confirmed' ||
+      status === 'cancelled' || status === 'completed') {
       validStatus = status as Appointment['status'];
     }
-    
-    // Create properly typed profiles and patients objects
-    // Handle possible SelectQueryError for profiles
+
     let profilesData = undefined;
-    if (appointment.profiles !== null) {
-      if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
-        profilesData = {
-          full_name: appointment.profiles?.full_name || "",
-          specialty: appointment.profiles?.specialty
-        };
-      }
+    if (appointment.profiles && typeof appointment.profiles === 'object') {
+      profilesData = {
+        full_name: appointment.profiles.full_name || "",
+        specialty: appointment.profiles.specialty
+      };
     }
-    
-    // Handle possible SelectQueryError for patients
     let patientsData = undefined;
-    if (appointment.patients !== null) {
-      if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
-        patientsData = {
-          full_name: appointment.patients?.full_name || ""
-        };
-      }
+    if (appointment.patients && typeof appointment.patients === 'object') {
+      patientsData = {
+        full_name: appointment.patients.full_name || ""
+      };
     }
-    
-    // Return properly typed appointment
+
     return {
       id: appointment.id,
       doctor_id: appointment.doctor_id,
@@ -114,7 +101,7 @@ export const updateAppointmentStatus = async (appointmentId: string, status: App
     .eq('id', appointmentId)
     .select()
     .single();
-    
+
   if (error) throw error;
   return data as Appointment;
 };
