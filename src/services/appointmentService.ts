@@ -65,26 +65,30 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
         status === 'cancelled' || status === 'completed') {
       validStatus = status as Appointment['status'];
     }
-    
+
     // Create properly typed profiles and patients objects
     let profilesData = null;
-    if (appointment.profiles && 
-        typeof appointment.profiles === 'object' && 
-        appointment.profiles !== null && 
-        !('error' in appointment.profiles)) {
+    if (
+      appointment.profiles && 
+      typeof appointment.profiles === 'object' &&
+      !('error' in appointment.profiles)
+    ) {
+      const profile = appointment.profiles;
       profilesData = {
-        full_name: appointment.profiles?.full_name || "",
-        specialty: appointment.profiles?.specialty
+        full_name: profile.full_name ?? "",
+        specialty: profile.specialty
       };
     }
     
     let patientsData = null;
-    if (appointment.patients && 
-        typeof appointment.patients === 'object' && 
-        appointment.patients !== null && 
-        !('error' in appointment.patients)) {
+    if (
+      appointment.patients &&
+      typeof appointment.patients === 'object' &&
+      !('error' in appointment.patients)
+    ) {
+      const patient = appointment.patients;
       patientsData = {
-        full_name: appointment.patients?.full_name || ""
+        full_name: patient.full_name ?? ""
       };
     }
     
@@ -118,3 +122,4 @@ export const updateAppointmentStatus = async (appointmentId: string, status: App
   if (error) throw error;
   return data as Appointment;
 };
+
