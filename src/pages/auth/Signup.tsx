@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -37,7 +36,7 @@ export default function Signup() {
               Create Account
             </CardTitle>
             <CardDescription className="text-center">
-              Join Health Risk Compass to monitor your health risks
+              Join Personal Healthcare to monitor your health risks
             </CardDescription>
           </CardHeader>
           <CardContent>

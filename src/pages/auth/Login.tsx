@@ -71,7 +71,7 @@ export default function Login() {
         <Card className="shadow-lg border-health-primary/20">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center text-health-secondary">
-              Health Risk Compass
+              Personal Healthcare
             </CardTitle>
             <CardDescription className="text-center">
               Sign in to access your health dashboard

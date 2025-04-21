@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ const Index = () => {
       {/* Hero Section */}
       <header className="container mx-auto px-4 py-8 md:py-16 text-center">
         <h1 className="text-4xl md:text-6xl font-bold text-health-dark mb-4">
-          Health Risk <span className="text-health-primary">Compass</span>
+          Personal <span className="text-health-primary">Healthcare</span>
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
           Your personalized healthcare risk prediction system for proactive health management
@@ -146,7 +145,7 @@ const Index = () => {
           </div>
           <h2 className="text-3xl font-bold mb-4">Your Data Security is Our Priority</h2>
           <p className="text-lg text-muted-foreground mb-6">
-            Health Risk Compass employs industry-leading security protocols to ensure your health data remains private and protected.
+            Personal Healthcare employs industry-leading security protocols to ensure your health data remains private and protected.
           </p>
           <div className="flex justify-center">
             <div className="inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-medium">
@@ -161,7 +160,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <h2 className="text-xl font-bold">Health Risk Compass</h2>
+              <h2 className="text-xl font-bold">Personal Healthcare</h2>
               <p className="text-gray-300">Personalized healthcare risk prediction</p>
             </div>
             <div className="flex gap-4">
@@ -170,7 +169,7 @@ const Index = () => {
             </div>
           </div>
           <div className="mt-8 text-center text-gray-300 text-sm">
-            <p>&copy; 2025 Health Risk Compass. All rights reserved.</p>
+            <p>&copy; 2025 Personal Healthcare. All rights reserved.</p>
           </div>
         </div>
       </footer>

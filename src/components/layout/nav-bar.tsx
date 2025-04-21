@@ -32,7 +32,7 @@ export function NavBar() {
         <div className="flex items-center space-x-2">
           <Link to="/" className="flex items-center space-x-2">
             <Heart className="h-6 w-6 text-health-primary" />
-            <span className="font-bold text-xl text-health-secondary">Health Risk Compass</span>
+            <span className="font-bold text-xl text-health-secondary">Personal Healthcare</span>
           </Link>
         </div>
         

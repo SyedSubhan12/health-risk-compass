@@ -1,6 +1,6 @@
-# Health Risk Compass
+# Personal Healthcare
 
-Health Risk Compass is a comprehensive health assessment platform that helps users monitor and manage their health risks. The platform uses advanced machine learning models to predict potential health conditions and provides personalized recommendations.
+Personal Healthcare is a comprehensive health assessment platform that helps users monitor and manage their health risks. The platform uses advanced machine learning models to predict potential health conditions and provides personalized recommendations.
 
 ## Features
 
@@ -21,8 +21,8 @@ Health Risk Compass is a comprehensive health assessment platform that helps use
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/health-risk-compass.git
-cd health-risk-compass
+git clone https://github.com/yourusername/personal-healthcare.git
+cd personal-healthcare
 ```
 
 2. Install dependencies:
@@ -53,4 +53,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-For any questions or support, please contact us at support@healthriskcompass.com
+For any questions or support, please contact us at support@personalhealthcare.com
