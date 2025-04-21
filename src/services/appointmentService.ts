@@ -71,7 +71,10 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     let profilesData = undefined;
     if (appointment.profiles !== null) {
       if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
-        profilesData = appointment.profiles;
+        profilesData = {
+          full_name: appointment.profiles?.full_name || "",
+          specialty: appointment.profiles?.specialty
+        };
       }
     }
     
@@ -79,7 +82,9 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     let patientsData = undefined;
     if (appointment.patients !== null) {
       if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
-        patientsData = appointment.patients;
+        patientsData = {
+          full_name: appointment.patients?.full_name || ""
+        };
       }
     }
     
