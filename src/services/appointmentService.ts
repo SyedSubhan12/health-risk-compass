@@ -68,28 +68,21 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
 
     // Create properly typed profiles and patients objects
     let profilesData = null;
-    if (
-      appointment.profiles && 
-      typeof appointment.profiles === 'object' &&
-      !('error' in appointment.profiles)
-    ) {
-      // Using optional chaining and nullish coalescing to safely handle properties
-      const profile = appointment.profiles;
+    if (appointment.profiles) {
+      // Using type assertions to handle the profile data safely
+      const profile = appointment.profiles as Record<string, unknown>;
       profilesData = {
-        full_name: profile && 'full_name' in profile ? String(profile.full_name) : "",
-        specialty: profile && 'specialty' in profile ? String(profile.specialty) : undefined
+        full_name: typeof profile.full_name === 'string' ? profile.full_name : "",
+        specialty: typeof profile.specialty === 'string' ? profile.specialty : undefined
       };
     }
     
     let patientsData = null;
-    if (
-      appointment.patients &&
-      typeof appointment.patients === 'object' &&
-      !('error' in appointment.patients)
-    ) {
-      const patient = appointment.patients;
+    if (appointment.patients) {
+      // Using type assertions to handle the patient data safely
+      const patient = appointment.patients as Record<string, unknown>;
       patientsData = {
-        full_name: patient && 'full_name' in patient ? String(patient.full_name) : ""
+        full_name: typeof patient.full_name === 'string' ? patient.full_name : ""
       };
     }
     
