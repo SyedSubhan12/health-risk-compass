@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Card, 
   CardContent, 
@@ -14,14 +14,24 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "@/hooks/use-toast";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { forgotPassword, error, clearError, loading } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please provide your email address",
+      });
+      return;
+    }
     await forgotPassword(email);
     setIsSubmitted(true);
   };
@@ -75,9 +85,11 @@ export default function ForgotPassword() {
             )}
           </CardContent>
           <CardFooter className="flex justify-center">
-            <Link to="/login" className="text-health-primary hover:underline text-sm">
-              Back to Sign In
-            </Link>
+            <div className="flex space-x-4">
+              <Link to="/login" className="text-health-primary hover:underline text-sm">
+                Back to Sign In
+              </Link>
+            </div>
           </CardFooter>
         </Card>
       </div>

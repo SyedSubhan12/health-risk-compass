@@ -44,17 +44,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
+        // Use setTimeout to avoid potential deadlocks with Supabase auth state changes
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
 
-        setUser({
-          ...session.user,
-          role: profile?.role as "patient" | "doctor",
-          name: profile?.full_name
-        });
+          setUser({
+            ...session.user,
+            role: profile?.role as "patient" | "doctor",
+            name: profile?.full_name
+          });
+        }, 0);
       } else {
         setUser(null);
       }
@@ -151,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      setLoading(true);
       setError(null);
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) throw signOutError;
@@ -167,6 +171,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Error",
         description: (err as Error).message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
