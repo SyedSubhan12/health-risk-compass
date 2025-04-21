@@ -128,9 +128,21 @@ export const makePrediction = async (
 
 /**
  * Saves a prediction to the user's history
+ * Note: This function is a mock implementation as we don't have a predictions table
  */
 export const savePrediction = async (prediction: ModelPrediction): Promise<void> => {
+  // Since we don't have a predictions table in the database schema,
+  // we're implementing this as a mock function that logs the prediction
+  console.log("Prediction saved:", prediction);
+  
+  // In a real implementation, we would:
+  /* 
   try {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new Error("User not authenticated");
+    }
+
     const { error } = await supabase
       .from('predictions')
       .insert({
@@ -139,7 +151,7 @@ export const savePrediction = async (prediction: ModelPrediction): Promise<void>
         prediction_value: prediction.prediction,
         confidence: prediction.confidence,
         input_data: prediction.inputData,
-        user_id: supabase.auth.getUser().then(({ data }) => data.user?.id)
+        user_id: userData.user.id
       });
 
     if (error) throw error;
@@ -147,12 +159,20 @@ export const savePrediction = async (prediction: ModelPrediction): Promise<void>
     console.error("Error saving prediction:", error);
     throw error;
   }
+  */
 };
 
 /**
  * Fetches prediction history for the current user
+ * Note: This function is a mock implementation as we don't have a predictions table
  */
 export const getUserPredictions = async (): Promise<ModelPrediction[]> => {
+  // Since we don't have a predictions table in the database schema,
+  // we're implementing this as a mock function that returns empty array
+  console.log("Fetching user predictions (mock)");
+
+  // In a real implementation, we would:
+  /*
   try {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
@@ -179,5 +199,8 @@ export const getUserPredictions = async (): Promise<ModelPrediction[]> => {
     console.error("Error fetching predictions:", error);
     return [];
   }
+  */
+  
+  // Return mock data
+  return [];
 };
-

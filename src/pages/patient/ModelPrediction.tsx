@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { AVAILABLE_MODELS, MLModel, makePrediction, ModelPrediction } from "@/services/modelService";
+import { AVAILABLE_MODELS, MLModel, makePrediction, type ModelPrediction as ModelPredictionType } from "@/services/modelService";
 import { ArrowLeft, BrainCircuit, BarChart4, LineChart, Layers } from "lucide-react";
 import { 
   ChartContainer, 
@@ -102,7 +102,7 @@ const ModelPrediction: React.FC = () => {
       return acc;
     }, {} as Record<string, any>);
   });
-  const [predictionResult, setPredictionResult] = useState<ModelPrediction | null>(null);
+  const [predictionResult, setPredictionResult] = useState<ModelPredictionType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [visualizationType, setVisualizationType] = useState<"bar" | "radar">("bar");
 
@@ -364,7 +364,7 @@ const ModelPrediction: React.FC = () => {
                             <XAxis dataKey="name" />
                             <YAxis />
                             <Tooltip />
-                            <Bar dataKey="value" fill={(entry) => entry.color || "#4f46e5"} />
+                            <Bar dataKey="value" fill="#4f46e5" />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
