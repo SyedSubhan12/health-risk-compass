@@ -68,17 +68,23 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     
     // Create properly typed profiles and patients objects
     let profilesData = null;
-    if (appointment.profiles && typeof appointment.profiles === 'object' && appointment.profiles !== null && !('error' in appointment.profiles)) {
+    if (appointment.profiles && 
+        typeof appointment.profiles === 'object' && 
+        appointment.profiles !== null && 
+        !('error' in appointment.profiles)) {
       profilesData = {
-        full_name: appointment.profiles.full_name || "",
-        specialty: appointment.profiles.specialty
+        full_name: appointment.profiles?.full_name || "",
+        specialty: appointment.profiles?.specialty
       };
     }
     
     let patientsData = null;
-    if (appointment.patients && typeof appointment.patients === 'object' && appointment.patients !== null && !('error' in appointment.patients)) {
+    if (appointment.patients && 
+        typeof appointment.patients === 'object' && 
+        appointment.patients !== null && 
+        !('error' in appointment.patients)) {
       patientsData = {
-        full_name: appointment.patients.full_name || ""
+        full_name: appointment.patients?.full_name || ""
       };
     }
     
