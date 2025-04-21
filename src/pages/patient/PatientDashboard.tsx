@@ -7,12 +7,37 @@ import {
 } from "@/components/layout/page-container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, RocketIcon, User2Icon, BrainCircuit } from "lucide-react";
+import { CalendarIcon, RocketIcon, User2Icon, BrainCircuit, Stethoscope } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { motion } from "framer-motion";
 
 export default function PatientDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const features = [
+    {
+      title: "Health Assessment",
+      description: "Get personalized health risk predictions and recommendations",
+      icon: Stethoscope,
+      path: "/health-assessment",
+      color: "bg-health-primary/10 text-health-primary"
+    },
+    {
+      title: "Book Appointment",
+      description: "Schedule appointments with healthcare professionals",
+      icon: CalendarIcon,
+      path: "/book-appointment",
+      color: "bg-blue-500/10 text-blue-500"
+    },
+    {
+      title: "Manage Profile",
+      description: "Update your personal information and preferences",
+      icon: User2Icon,
+      path: "/profile",
+      color: "bg-green-500/10 text-green-500"
+    }
+  ];
 
   return (
     <PageContainer>
@@ -21,103 +46,37 @@ export default function PatientDashboard() {
         description="Your personalized dashboard for managing appointments and health insights"
       />
 
-      <PageSection title="Quick Actions">
+      <PageSection>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Book Appointment</CardTitle>
-              <CardDescription>
-                Schedule your next consultation with ease
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <CalendarIcon className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Find a suitable time slot and book your appointment
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/patient-prediction")}>
-                Book Now
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Health Risk Assessment</CardTitle>
-              <CardDescription>
-                Understand your potential health risks
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <RocketIcon className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Take our assessment to get a personalized risk report
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/patient-prediction")}>
-                Start Assessment
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">ML Model Predictions</CardTitle>
-              <CardDescription>
-                Try our machine learning models for health predictions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <BrainCircuit className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Generate predictions using various ML models
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/model-prediction")}>
-                Try Models
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="col-span-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Manage Profile</CardTitle>
-              <CardDescription>
-                Update your personal and health information
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center">
-                <User2Icon className="w-8 h-8 text-primary mr-2" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Keep your profile up-to-date for better recommendations
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/patient-prediction")}>
-                Edit Profile
-              </Button>
-            </CardFooter>
-          </Card>
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <motion.div
+                key={feature.path}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <Card 
+                  className="h-full cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => navigate(feature.path)}
+                >
+                  <CardHeader>
+                    <div className={`w-12 h-12 rounded-full ${feature.color} flex items-center justify-center mb-4`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <CardTitle>{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardHeader>
+                  <CardFooter>
+                    <Button variant="ghost" className="w-full">
+                      Get Started
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       </PageSection>
     </PageContainer>

@@ -1,4 +1,4 @@
-
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +17,8 @@ import ModelPrediction from "./pages/patient/ModelPrediction";
 import Doctors from "./pages/patient/Doctors";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import DoctorInsights from "./pages/doctor/DoctorInsights";
+import BookAppointment from "./pages/BookAppointment";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -68,7 +70,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Auth routes */}
-      <Route path="/" element={<AuthLayout><Index /></AuthLayout>} />
+      <Route path="/" element={<Index />} />
       <Route path="/login" element={<AuthLayout><Login /></AuthLayout>} />
       <Route path="/signup" element={<AuthLayout><Signup /></AuthLayout>} />
       <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
@@ -83,10 +85,26 @@ const AppRoutes = () => {
         } 
       />
       <Route 
-        path="/model-prediction" 
+        path="/health-assessment" 
         element={
           <ProtectedRoute allowedRole="patient">
             <ModelPrediction />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/book-appointment" 
+        element={
+          <ProtectedRoute allowedRole="patient">
+            <BookAppointment />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         } 
       />
