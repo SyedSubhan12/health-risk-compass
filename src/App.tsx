@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +16,7 @@ import PatientPrediction from "./pages/patient/PatientPrediction";
 import ModelPrediction from "./pages/patient/ModelPrediction";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import DoctorInsights from "./pages/doctor/DoctorInsights";
+import DoctorsPage from "./pages/patient/Doctors";
 
 const queryClient = new QueryClient();
 
@@ -95,6 +95,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute allowedRole="patient">
             <ModelPrediction />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/doctors" 
+        element={
+          <ProtectedRoute allowedRole="patient">
+            <DoctorsPage />
           </ProtectedRoute>
         } 
       />

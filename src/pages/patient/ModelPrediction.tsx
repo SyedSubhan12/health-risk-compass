@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PageContainer, PageHeader } from "@/components/layout/page-container";
@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { AVAILABLE_MODELS, MLModel, makePrediction } from "@/services/modelService";
@@ -43,6 +41,13 @@ const FIELD_META = [
   { name: "Diabetes_binary", label: "Diabetes_binary", min: 0, max: 1, type: "number", defaultValue: 0 }
 ];
 
+const getTargetFields = (family: MLModel["family"]) => {
+  if (family === "diabetes") return ["Diabetes_012", "Diabetes_binary"];
+  if (family === "heartattack") return ["HeartDiseaseorAttack"];
+  if (family === "stroke") return ["Stroke"];
+  return [];
+};
+
 const ModelPredictionPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -55,6 +60,10 @@ const ModelPredictionPage: React.FC = () => {
   const [visualizationType, setVisualizationType] = useState<"bar" | "radar">("bar");
 
   const selectedModel: MLModel = AVAILABLE_MODELS.find(model => model.id === selectedModelId) || AVAILABLE_MODELS[0];
+  const targetFields = useMemo(() => getTargetFields(selectedModel.family), [selectedModel.family]);
+
+  // Filter out target variables from the form
+  const filteredFields = FIELD_META.filter(field => !targetFields.includes(field.name));
 
   const handleInputChange = (name: string, value: any) => {
     setInputValues(prev => ({ ...prev, [name]: value }));
@@ -63,9 +72,11 @@ const ModelPredictionPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const result = await makePrediction(selectedModelId, inputValues);
+      const filteredInput = Object.fromEntries(
+        Object.entries(inputValues).filter(([key]) => !targetFields.includes(key))
+      );
+      const result = await makePrediction(selectedModelId, filteredInput);
       setPredictionResult(result);
       toast.success("Prediction completed successfully!");
     } catch (error) {
@@ -145,7 +156,7 @@ const ModelPredictionPage: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {FIELD_META.map((field) => (
+                  {filteredFields.map((field) => (
                     <div key={field.name} className="space-y-2">
                       <Label htmlFor={field.name}>{field.label}</Label>
                       <Input
