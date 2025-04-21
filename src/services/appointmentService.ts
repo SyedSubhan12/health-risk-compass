@@ -70,8 +70,9 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     let profilesData = null;
     if (appointment.profiles) {
       // Check if it's potentially an error object
-      if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
-        const profile = appointment.profiles as unknown; // First cast to unknown
+      const profilesValue = appointment.profiles;
+      if (typeof profilesValue === 'object' && !('error' in profilesValue)) {
+        const profile = profilesValue as unknown; // First cast to unknown
         if (profile && typeof profile === 'object') {
           profilesData = {
             full_name: typeof (profile as any).full_name === 'string' ? (profile as any).full_name : "",
@@ -84,8 +85,9 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     let patientsData = null;
     if (appointment.patients) {
       // Check if it's potentially an error object
-      if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
-        const patient = appointment.patients as unknown; // First cast to unknown
+      const patientsValue = appointment.patients;
+      if (typeof patientsValue === 'object' && !('error' in patientsValue)) {
+        const patient = patientsValue as unknown; // First cast to unknown
         if (patient && typeof patient === 'object') {
           patientsData = {
             full_name: typeof (patient as any).full_name === 'string' ? (patient as any).full_name : ""
