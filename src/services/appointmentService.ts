@@ -71,9 +71,10 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     let profilesData = undefined;
     if (appointment.profiles) {
       if (typeof appointment.profiles === 'object' && appointment.profiles !== null && !('error' in appointment.profiles)) {
+        const profiles = appointment.profiles as { full_name?: string; specialty?: string } | null;
         profilesData = {
-          full_name: appointment.profiles && appointment.profiles.full_name ? appointment.profiles.full_name : 'Unknown Doctor',
-          specialty: appointment.profiles && appointment.profiles.specialty ? appointment.profiles.specialty : undefined
+          full_name: profiles && profiles.full_name ? profiles.full_name : 'Unknown Doctor',
+          specialty: profiles && profiles.specialty ? profiles.specialty : undefined
         };
       }
     }
@@ -82,8 +83,9 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     let patientsData = undefined;
     if (appointment.patients) {
       if (typeof appointment.patients === 'object' && appointment.patients !== null && !('error' in appointment.patients)) {
+        const patients = appointment.patients as { full_name?: string } | null;
         patientsData = {
-          full_name: appointment.patients && appointment.patients.full_name ? appointment.patients.full_name : 'Unknown Patient'
+          full_name: patients && patients.full_name ? patients.full_name : 'Unknown Patient'
         };
       }
     }
@@ -135,15 +137,19 @@ export const getAppointmentById = async (appointmentId: string) => {
   // Handle possible SelectQueryError for profiles and patients
   const appointmentData = data as any;
   
-  // Create a correctly typed Appointment object with null checks
+  // Create a safely typed Appointment object with null checks
+  const profiles = appointmentData.profiles && typeof appointmentData.profiles === 'object' && !('error' in appointmentData.profiles)
+    ? appointmentData.profiles
+    : { full_name: 'Unknown Doctor' };
+    
+  const patients = appointmentData.patients && typeof appointmentData.patients === 'object' && !('error' in appointmentData.patients)
+    ? appointmentData.patients
+    : { full_name: 'Unknown Patient' };
+  
   return {
     ...appointmentData,
-    profiles: appointmentData.profiles && appointmentData.profiles !== null && !('error' in appointmentData.profiles) 
-      ? appointmentData.profiles 
-      : { full_name: 'Unknown Doctor' },
-    patients: appointmentData.patients && appointmentData.patients !== null && !('error' in appointmentData.patients) 
-      ? appointmentData.patients 
-      : { full_name: 'Unknown Patient' }
+    profiles,
+    patients
   } as Appointment;
 };
 
@@ -162,9 +168,13 @@ export const getDoctorPatientConnections = async (doctorId: string) => {
   return data?.map(item => {
     // Check if item has expected properties
     const patientId = 'patient_id' in item ? item.patient_id : null;
-    const patientName = item.patients !== null && 'patients' in item && item.patients !== null && typeof item.patients === 'object' && item.patients && 'full_name' in item.patients
-      ? item.patients.full_name
-      : 'Unknown Patient';
+    
+    // Safely extract patient name with null checking
+    let patientName = 'Unknown Patient';
+    if (item.patients && typeof item.patients === 'object' && !('error' in item.patients)) {
+      const patients = item.patients as { full_name?: string } | null;
+      patientName = patients && patients.full_name ? patients.full_name : 'Unknown Patient';
+    }
       
     return {
       id: patientId,
@@ -188,12 +198,21 @@ export const getPatientDoctorConnections = async (patientId: string) => {
   return data?.map(item => {
     // Check if item has expected properties
     const doctorId = 'doctor_id' in item ? item.doctor_id : null;
-    const doctorInfo = 'profiles' in item && item.profiles && typeof item.profiles === 'object';
+    
+    // Safely extract doctor info with explicit type checks
+    let doctorName = 'Unknown Doctor';
+    let doctorSpecialty = undefined;
+    
+    if (item.profiles && typeof item.profiles === 'object' && !('error' in item.profiles)) {
+      const profiles = item.profiles as { full_name?: string; specialty?: string } | null;
+      doctorName = profiles && profiles.full_name ? profiles.full_name : 'Unknown Doctor';
+      doctorSpecialty = profiles && profiles.specialty ? profiles.specialty : undefined;
+    }
     
     return {
       id: doctorId,
-      name: doctorInfo && item.profiles !== null && item.profiles && 'full_name' in item.profiles ? item.profiles.full_name : 'Unknown Doctor',
-      specialty: doctorInfo && item.profiles !== null && item.profiles && 'specialty' in item.profiles ? item.profiles.specialty : undefined
+      name: doctorName,
+      specialty: doctorSpecialty
     };
   }).filter(item => item.id !== null) || [];
 };
