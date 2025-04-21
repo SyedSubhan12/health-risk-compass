@@ -69,21 +69,29 @@ export const fetchUserAppointments = async (userId: string, userRole: string) =>
     // Create properly typed profiles and patients objects
     let profilesData = null;
     if (appointment.profiles) {
-      // Using type assertions to handle the profile data safely
-      const profile = appointment.profiles as Record<string, unknown>;
-      profilesData = {
-        full_name: typeof profile.full_name === 'string' ? profile.full_name : "",
-        specialty: typeof profile.specialty === 'string' ? profile.specialty : undefined
-      };
+      // Check if it's potentially an error object
+      if (typeof appointment.profiles === 'object' && !('error' in appointment.profiles)) {
+        const profile = appointment.profiles as unknown; // First cast to unknown
+        if (profile && typeof profile === 'object') {
+          profilesData = {
+            full_name: typeof (profile as any).full_name === 'string' ? (profile as any).full_name : "",
+            specialty: typeof (profile as any).specialty === 'string' ? (profile as any).specialty : undefined
+          };
+        }
+      }
     }
     
     let patientsData = null;
     if (appointment.patients) {
-      // Using type assertions to handle the patient data safely
-      const patient = appointment.patients as Record<string, unknown>;
-      patientsData = {
-        full_name: typeof patient.full_name === 'string' ? patient.full_name : ""
-      };
+      // Check if it's potentially an error object
+      if (typeof appointment.patients === 'object' && !('error' in appointment.patients)) {
+        const patient = appointment.patients as unknown; // First cast to unknown
+        if (patient && typeof patient === 'object') {
+          patientsData = {
+            full_name: typeof (patient as any).full_name === 'string' ? (patient as any).full_name : ""
+          };
+        }
+      }
     }
     
     // Return properly typed appointment
